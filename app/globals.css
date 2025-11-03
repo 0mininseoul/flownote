@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #6366f1;
+  --primary-light: #818cf8;
+  --primary-dark: #4f46e5;
+  --bg-base: #ffffff;
+  --bg-glass: rgba(255, 255, 255, 0.8);
+  --border-glass: rgba(255, 255, 255, 0.2);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-gradient-to-br from-indigo-50 via-white to-purple-50 min-h-screen;
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    @apply relative bg-white/80 backdrop-blur-xl border border-white/20 rounded-3xl shadow-xl shadow-purple-500/10 hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-300;
+  }
+
+  .glass-button {
+    @apply relative bg-gradient-to-r from-indigo-600 to-purple-600 text-white backdrop-blur-xl rounded-xl px-6 py-3 font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105;
+  }
+}
