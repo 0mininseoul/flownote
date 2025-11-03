@@ -1,15 +1,15 @@
 import OpenAI from "openai";
 import { buildPrompt, FORMAT_PROMPTS } from "@/lib/prompts";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 export async function formatDocument(
   transcript: string,
   format: keyof typeof FORMAT_PROMPTS,
   customPrompt?: string
 ): Promise<string> {
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+
   const prompt = buildPrompt(format, transcript, customPrompt);
 
   const response = await openai.chat.completions.create({

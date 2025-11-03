@@ -4,9 +4,10 @@ import { NextRequest, NextResponse } from "next/server";
 // GET /api/recordings/[id] - Get recording details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createClient();
 
     const {
@@ -20,7 +21,7 @@ export async function GET(
     const { data: recording, error } = await supabase
       .from("recordings")
       .select("*")
-      .eq("id", params.id)
+      .eq("id", id)
       .eq("user_id", user.id)
       .single();
 
@@ -44,9 +45,10 @@ export async function GET(
 // DELETE /api/recordings/[id] - Delete recording
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createClient();
 
     const {
@@ -61,7 +63,7 @@ export async function DELETE(
     const { data: recording } = await supabase
       .from("recordings")
       .select("*")
-      .eq("id", params.id)
+      .eq("id", id)
       .eq("user_id", user.id)
       .single();
 
@@ -81,7 +83,7 @@ export async function DELETE(
     const { error } = await supabase
       .from("recordings")
       .delete()
-      .eq("id", params.id);
+      .eq("id", id);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
