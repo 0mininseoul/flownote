@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate title
-    const title = `VoiceNote - ${new Date().toLocaleString("ko-KR")}`;
+    const title = `Flownote - ${new Date().toLocaleString("ko-KR")}`;
 
     // Upload audio to Supabase Storage
     const fileName = `${user.id}/${Date.now()}.webm`;

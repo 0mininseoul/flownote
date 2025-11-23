@@ -8,44 +8,68 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-    if (!error) {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    if (error) {
+      console.error("Error exchanging code for session:", error);
+      return NextResponse.redirect(
+        `${origin}/auth/auth-code-error?message=${encodeURIComponent(error.message)}`
+      );
+    }
 
-      if (user) {
-        // Check if user exists in our users table
-        const { data: existingUser } = await supabase
-          .from("users")
-          .select("*")
-          .eq("id", user.id)
-          .single();
+    if (!data.session) {
+      console.error("No session returned after code exchange");
+      return NextResponse.redirect(
+        `${origin}/auth/auth-code-error?message=No session created`
+      );
+    }
 
-        // If user doesn't exist, create them
-        if (!existingUser) {
-          await supabase.from("users").insert({
-            id: user.id,
-            email: user.email!,
-            google_id: user.user_metadata.sub,
-          });
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      // Check if user exists in our users table
+      const { data: existingUser, error: fetchError } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (fetchError && fetchError.code !== "PGRST116") {
+        // PGRST116 is "not found" error, which is expected for new users
+        console.error("Error fetching user:", fetchError);
+      }
+
+      // If user doesn't exist, create them
+      if (!existingUser) {
+        const { error: insertError } = await supabase.from("users").insert({
+          id: user.id,
+          email: user.email!,
+          google_id: user.user_metadata.sub,
+        });
+
+        if (insertError) {
+          console.error("Error creating user:", insertError);
+          return NextResponse.redirect(
+            `${origin}/auth/auth-code-error?message=${encodeURIComponent("Failed to create user profile")}`
+          );
         }
       }
+    }
 
-      const forwardedHost = request.headers.get("x-forwarded-host");
-      const isLocalEnv = process.env.NODE_ENV === "development";
+    const forwardedHost = request.headers.get("x-forwarded-host");
+    const isLocalEnv = process.env.NODE_ENV === "development";
 
-      if (isLocalEnv) {
-        return NextResponse.redirect(`${origin}${next}`);
-      } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`);
-      } else {
-        return NextResponse.redirect(`${origin}${next}`);
-      }
+    if (isLocalEnv) {
+      return NextResponse.redirect(`${origin}${next}`);
+    } else if (forwardedHost) {
+      return NextResponse.redirect(`https://${forwardedHost}${next}`);
+    } else {
+      return NextResponse.redirect(`${origin}${next}`);
     }
   }
 
   // Return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/auth/auth-code-error`);
+  return NextResponse.redirect(`${origin}/auth/auth-code-error?message=No authorization code provided`);
 }

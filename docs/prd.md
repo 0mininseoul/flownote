@@ -1,5 +1,5 @@
 # 📋 **PRD (Product Requirements Document)**
-## **VoiceNote - 자동 음성 문서화 서비스**
+## **Flownote - 자동 음성 문서화 서비스**
 
 **버전:** 1.0 (MVP)  
 **작성일:** 2025-11-03  
@@ -259,7 +259,7 @@ const mediaRecorder = new MediaRecorder(stream, {
 
 ### **5.3 AI 문서 정리**
 
-**API:** OpenAI
+**API:** OpenAI gpt-4o-mini
 **모델:** `gpt-4o-mini`
 
 **기본 프롬프트 (3가지):**
@@ -702,8 +702,8 @@ FormData: audioFile
 ```json
 // public/manifest.json
 {
-  "name": "VoiceNote",
-  "short_name": "VoiceNote",
+  "name": "Flownote",
+  "short_name": "Flownote",
   "description": "자동 음성 문서화 서비스",
   "start_url": "/",
   "display": "standalone",

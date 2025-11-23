@@ -1,6 +1,6 @@
 {
-  "name": "VoiceNote - 자동 음성 문서화 서비스",
-  "short_name": "VoiceNote",
+  "name": "Flownote - 자동 음성 문서화 서비스",
+  "short_name": "Flownote",
   "description": "녹음 한 번 하면 완성되는 자동 문서",
   "start_url": "/",
   "display": "standalone",

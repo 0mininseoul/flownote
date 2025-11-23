@@ -80,7 +80,7 @@ export default function OnboardingPage() {
                 환영합니다!
               </h2>
               <p className="text-gray-600">
-                VoiceNote를 사용하기 위해 간단한 설정을 진행합니다.
+                Flownote를 사용하기 위해 간단한 설정을 진행합니다.
               </p>
               <button
                 onClick={() => setStep(2)}

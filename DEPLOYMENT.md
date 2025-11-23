@@ -1,6 +1,6 @@
-# VoiceNote 배포 가이드
+# Flownote 배포 가이드
 
-이 문서는 VoiceNote 애플리케이션을 Vercel에 배포하는 방법을 설명합니다.
+이 문서는 Flownote 애플리케이션을 Vercel에 배포하는 방법을 설명합니다.
 
 ## 사전 준비
 
@@ -84,7 +84,7 @@ git init
 git add .
 git commit -m "Initial commit"
 git branch -M main
-git remote add origin https://github.com/your-username/voicenote.git
+git remote add origin https://github.com/your-username/flownote.git
 git push -u origin main
 ```
 

@@ -1,6 +1,6 @@
-// Service Worker for VoiceNote PWA
+// Service Worker for Flownote PWA
 
-const CACHE_NAME = 'voicenote-v1';
+const CACHE_NAME = 'flownote-v1';
 const urlsToCache = [
   '/',
   '/dashboard',

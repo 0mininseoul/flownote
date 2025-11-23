@@ -1,6 +1,6 @@
-# VoiceNote 로컬 개발 환경 설정
+# Flownote 로컬 개발 환경 설정
 
-이 문서는 VoiceNote를 로컬 환경에서 실행하는 방법을 설명합니다.
+이 문서는 Flownote를 로컬 환경에서 실행하는 방법을 설명합니다.
 
 ## 요구사항
 
@@ -13,8 +13,8 @@
 ## 1. 프로젝트 클론
 
 ```bash
-git clone https://github.com/your-username/voicenote.git
-cd voicenote
+git clone https://github.com/your-username/flownote.git
+cd flownote
 ```
 
 ## 2. 패키지 설치
