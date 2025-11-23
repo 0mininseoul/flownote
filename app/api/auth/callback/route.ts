@@ -14,14 +14,14 @@ export async function GET(request: NextRequest) {
       console.error("Error exchanging code for session:", error);
       const errorUrl = new URL("/auth/auth-code-error", origin);
       errorUrl.searchParams.set("message", error.message);
-      return NextResponse.redirect(errorUrl, response);
+      return NextResponse.redirect(errorUrl);
     }
 
     if (!data.session) {
       console.error("No session returned after code exchange");
       const errorUrl = new URL("/auth/auth-code-error", origin);
       errorUrl.searchParams.set("message", "No session created");
-      return NextResponse.redirect(errorUrl, response);
+      return NextResponse.redirect(errorUrl);
     }
 
     const {
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
           console.error("Error creating user:", insertError);
           const errorUrl = new URL("/auth/auth-code-error", origin);
           errorUrl.searchParams.set("message", "Failed to create user profile");
-          return NextResponse.redirect(errorUrl, response);
+          return NextResponse.redirect(errorUrl);
         }
       }
     }
@@ -70,7 +70,15 @@ export async function GET(request: NextRequest) {
       redirectUrl = `${origin}${next}`;
     }
 
-    return NextResponse.redirect(redirectUrl, response);
+    // Create redirect response with cookies
+    const redirectResponse = NextResponse.redirect(redirectUrl);
+
+    // Copy cookies from the response object
+    response.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie);
+    });
+
+    return redirectResponse;
   }
 
   // Return the user to an error page with instructions
