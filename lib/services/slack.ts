@@ -58,13 +58,21 @@ export async function sendSlackNotification(
 }
 
 // OAuth helpers
-export function getSlackAuthUrl(redirectUri: string): string {
+export function getSlackAuthUrl(redirectUri: string, state?: string): string {
   const clientId = process.env.SLACK_CLIENT_ID!;
   const scopes = "chat:write,channels:read,groups:read";
 
-  return `https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=${scopes}&redirect_uri=${encodeURIComponent(
-    redirectUri
-  )}`;
+  const params = new URLSearchParams({
+    client_id: clientId,
+    scope: scopes,
+    redirect_uri: redirectUri,
+  });
+
+  if (state) {
+    params.append("state", state);
+  }
+
+  return `https://slack.com/oauth/v2/authorize?${params.toString()}`;
 }
 
 export async function exchangeSlackCode(
