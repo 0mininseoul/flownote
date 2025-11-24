@@ -1,0 +1,42 @@
+import { createClient } from "@/lib/supabase/server";
+import { NextRequest, NextResponse } from "next/server";
+import { getNotionPages } from "@/lib/services/notion";
+
+// GET /api/notion/pages - List user's Notion pages
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Get user's Notion access token
+    const { data: userData } = await supabase
+      .from("users")
+      .select("notion_access_token")
+      .eq("id", user.id)
+      .single();
+
+    if (!userData?.notion_access_token) {
+      return NextResponse.json(
+        { error: "Notion not connected" },
+        { status: 400 }
+      );
+    }
+
+    const pages = await getNotionPages(userData.notion_access_token);
+
+    return NextResponse.json({ pages });
+  } catch (error) {
+    console.error("Failed to fetch Notion pages:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch pages" },
+      { status: 500 }
+    );
+  }
+}

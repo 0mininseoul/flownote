@@ -107,7 +107,23 @@ export async function POST(request: NextRequest) {
       userData,
       title,
       publicUrl
-    ).catch(console.error);
+    ).catch(async (error) => {
+      console.error(`[${recording.id}] Critical error in processRecording:`, error);
+      // Update status to failed if uncaught error
+      try {
+        const supabase = await createClient();
+        await supabase
+          .from("recordings")
+          .update({
+            status: "failed",
+            error_step: "upload",
+            error_message: `Critical error: ${error instanceof Error ? error.message : "Unknown error"}`
+          })
+          .eq("id", recording.id);
+      } catch (updateError) {
+        console.error(`[${recording.id}] Failed to update error status:`, updateError);
+      }
+    });
 
     // Update usage
     await supabase

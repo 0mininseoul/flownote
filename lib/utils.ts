@@ -23,10 +23,29 @@ export function formatDurationMinutes(seconds: number): string {
 
 /**
  * Format date to Korean Standard Time (KST, UTC+9)
+ * Accepts Date object or ISO string
  */
-export function formatKSTDate(date?: Date): string {
-  const targetDate = date || new Date();
-  return targetDate.toLocaleString("ko-KR", {
+export function formatKSTDate(date?: Date | string): string {
+  let targetDate: Date;
+
+  if (!date) {
+    targetDate = new Date();
+  } else if (typeof date === 'string') {
+    // Parse ISO string as UTC
+    targetDate = new Date(date);
+  } else {
+    targetDate = date;
+  }
+
+  // Use Intl.DateTimeFormat for reliable timezone conversion
+  return new Intl.DateTimeFormat("ko-KR", {
     timeZone: "Asia/Seoul",
-  });
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  }).format(targetDate);
 }

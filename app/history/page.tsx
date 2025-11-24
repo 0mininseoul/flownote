@@ -230,7 +230,7 @@ export default function HistoryPage() {
                           <span>{formatDurationMinutes(recording.duration_seconds)}</span>
                           <span>•</span>
                           <span>
-                            {formatKSTDate(new Date(recording.created_at))}
+                            {formatKSTDate(recording.created_at)}
                           </span>
                         </div>
                       </div>

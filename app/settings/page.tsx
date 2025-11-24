@@ -3,11 +3,33 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+interface NotionDatabase {
+  id: string;
+  title: string;
+  url: string;
+  last_edited_time: string;
+}
+
+interface NotionPage {
+  id: string;
+  title: string;
+  url: string;
+  last_edited_time: string;
+}
+
 export default function SettingsPage() {
   const router = useRouter();
   const [usage, setUsage] = useState({ used: 0, limit: 350 });
   const [userEmail, setUserEmail] = useState("");
   const [loading, setLoading] = useState(true);
+  const [notionDatabaseId, setNotionDatabaseId] = useState<string | null>(null);
+  const [showDatabaseModal, setShowDatabaseModal] = useState(false);
+  const [databases, setDatabases] = useState<NotionDatabase[]>([]);
+  const [pages, setPages] = useState<NotionPage[]>([]);
+  const [modalTab, setModalTab] = useState<"select" | "create">("select");
+  const [selectedPageId, setSelectedPageId] = useState("");
+  const [newDbTitle, setNewDbTitle] = useState("Flownote Recordings");
+  const [modalLoading, setModalLoading] = useState(false);
 
   useEffect(() => {
     fetchUserData();
@@ -25,10 +47,89 @@ export default function SettingsPage() {
 
       setUsage(usageData);
       setUserEmail(userData.email || "");
+      setNotionDatabaseId(userData.notion_database_id || null);
     } catch (error) {
       console.error("Failed to fetch user data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const openDatabaseModal = async () => {
+    setShowDatabaseModal(true);
+    setModalLoading(true);
+    try {
+      const [dbResponse, pageResponse] = await Promise.all([
+        fetch("/api/notion/databases"),
+        fetch("/api/notion/pages"),
+      ]);
+
+      if (dbResponse.ok) {
+        const dbData = await dbResponse.json();
+        setDatabases(dbData.databases || []);
+      }
+
+      if (pageResponse.ok) {
+        const pageData = await pageResponse.json();
+        setPages(pageData.pages || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch Notion data:", error);
+      alert("Notion 데이터를 불러오는데 실패했습니다.");
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const selectDatabase = async (databaseId: string) => {
+    try {
+      const response = await fetch("/api/user/notion-database", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ databaseId }),
+      });
+
+      if (response.ok) {
+        setNotionDatabaseId(databaseId);
+        setShowDatabaseModal(false);
+        alert("Notion 데이터베이스가 설정되었습니다.");
+      } else {
+        throw new Error("Failed to update database");
+      }
+    } catch (error) {
+      console.error("Failed to set database:", error);
+      alert("데이터베이스 설정에 실패했습니다.");
+    }
+  };
+
+  const createDatabase = async () => {
+    if (!selectedPageId) {
+      alert("페이지를 선택해주세요.");
+      return;
+    }
+
+    setModalLoading(true);
+    try {
+      const response = await fetch("/api/notion/database", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pageId: selectedPageId,
+          title: newDbTitle,
+        }),
+      });
+
+      if (response.ok) {
+        const { databaseId } = await response.json();
+        await selectDatabase(databaseId);
+      } else {
+        throw new Error("Failed to create database");
+      }
+    } catch (error) {
+      console.error("Failed to create database:", error);
+      alert("데이터베이스 생성에 실패했습니다.");
+    } finally {
+      setModalLoading(false);
     }
   };
 
@@ -190,6 +291,26 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* Notion Database Settings */}
+        <div className="glass-card p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-800">
+              Notion 데이터베이스
+            </h2>
+            <button
+              onClick={openDatabaseModal}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+            >
+              {notionDatabaseId ? "변경" : "설정"}
+            </button>
+          </div>
+          <p className="text-sm text-gray-600">
+            {notionDatabaseId
+              ? "녹음 내용이 저장될 Notion 데이터베이스가 설정되었습니다."
+              : "녹음 내용을 저장할 Notion 데이터베이스를 선택하거나 생성하세요."}
+          </p>
+        </div>
+
         {/* Format Settings */}
         <div className="glass-card p-6">
           <div className="flex items-center justify-between mb-4">
@@ -252,6 +373,159 @@ export default function SettingsPage() {
           </button>
         </div>
       </main>
+
+      {/* Database Selection Modal */}
+      {showDatabaseModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-gray-800">
+                  Notion 데이터베이스 설정
+                </h2>
+                <button
+                  onClick={() => setShowDatabaseModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Tabs */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setModalTab("select")}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    modalTab === "select"
+                      ? "bg-indigo-600 text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  기존 DB 선택
+                </button>
+                <button
+                  onClick={() => setModalTab("create")}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    modalTab === "create"
+                      ? "bg-indigo-600 text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  새 DB 생성
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto max-h-[calc(80vh-200px)]">
+              {modalLoading ? (
+                <div className="flex justify-center py-12">
+                  <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : modalTab === "select" ? (
+                <div className="space-y-3">
+                  {databases.length === 0 ? (
+                    <div className="text-center py-12">
+                      <p className="text-gray-600 mb-4">
+                        사용 가능한 데이터베이스가 없습니다.
+                      </p>
+                      <button
+                        onClick={() => setModalTab("create")}
+                        className="text-indigo-600 hover:text-indigo-700 font-medium"
+                      >
+                        새 데이터베이스 생성하기 →
+                      </button>
+                    </div>
+                  ) : (
+                    databases.map((db) => (
+                      <button
+                        key={db.id}
+                        onClick={() => selectDatabase(db.id)}
+                        className="w-full p-4 border-2 border-gray-200 rounded-xl hover:border-indigo-600 hover:bg-indigo-50 transition-all text-left"
+                      >
+                        <div className="font-semibold text-gray-800 mb-1">
+                          {db.title}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          마지막 수정: {new Date(db.last_edited_time).toLocaleDateString("ko-KR")}
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      데이터베이스 이름
+                    </label>
+                    <input
+                      type="text"
+                      value={newDbTitle}
+                      onChange={(e) => setNewDbTitle(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                      placeholder="Flownote Recordings"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      생성할 페이지 선택
+                    </label>
+                    {pages.length === 0 ? (
+                      <p className="text-gray-600 text-sm">
+                        사용 가능한 페이지가 없습니다. Notion에서 페이지를 만든 후 다시 시도하세요.
+                      </p>
+                    ) : (
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {pages.map((page) => (
+                          <button
+                            key={page.id}
+                            onClick={() => setSelectedPageId(page.id)}
+                            className={`w-full p-3 border-2 rounded-lg transition-all text-left ${
+                              selectedPageId === page.id
+                                ? "border-indigo-600 bg-indigo-50"
+                                : "border-gray-200 hover:border-gray-300"
+                            }`}
+                          >
+                            <div className="font-medium text-gray-800">
+                              {page.title}
+                            </div>
+                            <div className="text-xs text-gray-600 mt-1">
+                              마지막 수정: {new Date(page.last_edited_time).toLocaleDateString("ko-KR")}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={createDatabase}
+                    disabled={!selectedPageId || modalLoading}
+                    className="w-full px-4 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  >
+                    데이터베이스 생성
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -121,6 +121,120 @@ function convertMarkdownToBlocks(markdown: string): any[] {
   return blocks;
 }
 
+// Get user's databases
+export async function getNotionDatabases(accessToken: string): Promise<any[]> {
+  const notion = new Client({ auth: accessToken });
+
+  try {
+    const response = await notion.search({
+      filter: {
+        property: "object",
+        value: "database" as any,
+      },
+      sort: {
+        direction: "descending",
+        timestamp: "last_edited_time",
+      },
+    });
+
+    return response.results
+      .filter((item: any) => item.object === "database")
+      .map((db: any) => ({
+        id: db.id,
+        title: db.title?.[0]?.plain_text || "Untitled",
+        url: db.url,
+        last_edited_time: db.last_edited_time,
+      }));
+  } catch (error) {
+    console.error("Failed to fetch Notion databases:", error);
+    throw new Error("Failed to fetch databases");
+  }
+}
+
+// Create a new database in a page
+export async function createNotionDatabase(
+  accessToken: string,
+  pageId: string,
+  title: string = "Flownote Recordings"
+): Promise<string> {
+  const notion = new Client({ auth: accessToken });
+
+  try {
+    const response = await notion.databases.create({
+      parent: {
+        type: "page_id",
+        page_id: pageId,
+      },
+      title: [
+        {
+          type: "text",
+          text: {
+            content: title,
+          },
+        },
+      ],
+      properties: {
+        title: {
+          title: {},
+        },
+        format: {
+          select: {
+            options: [
+              { name: "meeting", color: "blue" },
+              { name: "interview", color: "green" },
+              { name: "lecture", color: "purple" },
+              { name: "custom", color: "gray" },
+            ],
+          },
+        },
+        duration: {
+          number: {
+            format: "number",
+          },
+        },
+        created: {
+          date: {},
+        },
+      },
+    } as any);
+
+    return response.id;
+  } catch (error) {
+    console.error("Failed to create Notion database:", error);
+    throw new Error("Failed to create database");
+  }
+}
+
+// Get user's pages (for creating database)
+export async function getNotionPages(accessToken: string): Promise<any[]> {
+  const notion = new Client({ auth: accessToken });
+
+  try {
+    const response = await notion.search({
+      filter: {
+        property: "object",
+        value: "page",
+      },
+      sort: {
+        direction: "descending",
+        timestamp: "last_edited_time",
+      },
+    });
+
+    return response.results.map((page: any) => ({
+      id: page.id,
+      title: page.properties?.title?.title?.[0]?.plain_text ||
+             page.properties?.Name?.title?.[0]?.plain_text ||
+             "Untitled",
+      url: page.url,
+      last_edited_time: page.last_edited_time,
+    }));
+  } catch (error) {
+    console.error("Failed to fetch Notion pages:", error);
+    throw new Error("Failed to fetch pages");
+  }
+}
+
 // OAuth helpers
 export function getNotionAuthUrl(redirectUri: string, state?: string): string {
   const clientId = process.env.NOTION_CLIENT_ID!;
