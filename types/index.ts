@@ -22,11 +22,14 @@ export interface Recording {
   transcript?: string;
   formatted_content?: string;
   notion_page_url?: string;
+  error_message?: string;
+  error_step?: ErrorStep;
   created_at: string;
 }
 
 export type RecordingFormat = "meeting" | "interview" | "lecture" | "custom";
 export type RecordingStatus = "processing" | "completed" | "failed";
+export type ErrorStep = "upload" | "transcription" | "formatting" | "notion" | "slack";
 
 export interface CustomFormat {
   id: string;

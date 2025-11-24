@@ -75,6 +75,23 @@ export default function HistoryPage() {
     }
   };
 
+  const getErrorStepText = (errorStep?: string) => {
+    switch (errorStep) {
+      case "transcription":
+        return "음성 전사 단계";
+      case "formatting":
+        return "AI 포맷팅 단계";
+      case "notion":
+        return "Notion 연동 단계";
+      case "slack":
+        return "Slack 알림 단계";
+      case "upload":
+        return "파일 업로드 단계";
+      default:
+        return "알 수 없는 단계";
+    }
+  };
+
   const getFormatEmoji = (format: string) => {
     switch (format) {
       case "meeting":
@@ -240,6 +257,25 @@ export default function HistoryPage() {
                       </button>
                     </div>
 
+                    {/* Error Message */}
+                    {recording.status === "failed" && recording.error_message && (
+                      <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <div className="flex items-start gap-2">
+                          <span className="text-red-600 text-sm font-semibold">
+                            ⚠️ 오류 발생
+                          </span>
+                          {recording.error_step && (
+                            <span className="text-red-600 text-sm">
+                              ({getErrorStepText(recording.error_step)})
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-red-700 text-sm mt-1">
+                          {recording.error_message}
+                        </p>
+                      </div>
+                    )}
+
                     {/* Links */}
                     {recording.status === "completed" && (
                       <div className="flex gap-2 mt-4">
@@ -258,6 +294,18 @@ export default function HistoryPage() {
                           className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                         >
                           상세 보기
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Show detail button even for failed recordings if transcript exists */}
+                    {recording.status === "failed" && recording.transcript && (
+                      <div className="flex gap-2 mt-4">
+                        <button
+                          onClick={() => router.push(`/recordings/${recording.id}`)}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          전사본 보기
                         </button>
                       </div>
                     )}

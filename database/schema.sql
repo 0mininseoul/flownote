@@ -30,6 +30,8 @@ CREATE TABLE recordings (
   transcript TEXT,
   formatted_content TEXT,
   notion_page_url TEXT,
+  error_message TEXT,
+  error_step TEXT CHECK (error_step IN ('upload', 'transcription', 'formatting', 'notion', 'slack')),
   created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -83,6 +85,7 @@ CREATE POLICY "Users can delete own formats" ON custom_formats
 -- Indexes for performance
 CREATE INDEX idx_recordings_user_id ON recordings(user_id);
 CREATE INDEX idx_recordings_created_at ON recordings(created_at DESC);
+CREATE INDEX idx_recordings_failed ON recordings(status, error_step) WHERE status = 'failed';
 CREATE INDEX idx_custom_formats_user_id ON custom_formats(user_id);
 
 -- Function to auto-delete old recordings (30 days)
