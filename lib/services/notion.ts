@@ -170,7 +170,7 @@ export async function getNotionDatabases(accessToken: string): Promise<any[]> {
                 id: dbId,
                 title: (block as any).child_database?.title || "Untitled",
                 url: `https://notion.so/${dbId.replace(/-/g, "")}`,
-                last_edited_time: (block as any).last_edited_time || page.last_edited_time,
+                last_edited_time: (block as any).last_edited_time || (page as any).last_edited_time,
               });
             }
           });
