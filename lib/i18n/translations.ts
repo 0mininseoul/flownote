@@ -76,8 +76,8 @@ export const translations = {
         google: "안전한 로그인",
       },
       cta: {
-        title: "오늘부터 아이디어를 기록하세요",
-        description: "녹음 버튼 하나만 누르면 됩니다. 자동화된 문서화로 매주 몇 시간을 절약할 수 있어요!",
+        title: "녹음 버튼 하나만 누르면 됩니다.",
+        description: "자동화된 문서화로 매주 몇 시간을 절약할 수 있어요!",
       },
       footer: {
         rights: "©2025 FLOWNOTE · All rights reserved.",

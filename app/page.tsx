@@ -51,7 +51,7 @@ export default function Home() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 animate-slide-up" style={{ animationDelay: "0.2s" }}>
-              <GoogleLoginButton variant="primary" />
+              <GoogleLoginButton variant="nav" />
             </div>
           </div>
         </div>
@@ -203,7 +203,7 @@ export default function Home() {
           <p className="text-lg text-white/80 max-w-2xl mx-auto mb-8">
             {t.landing.cta.description}
           </p>
-          <GoogleLoginButton variant="primary" />
+          <GoogleLoginButton variant="nav" />
         </div>
       </section>
 
