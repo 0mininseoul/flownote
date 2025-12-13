@@ -29,7 +29,7 @@ export default function FormatsPage() {
 
   const createFormat = async () => {
     if (!newFormat.name || !newFormat.prompt) {
-      alert("이름과 프롬프트를 입력해주세요.");
+      alert("Please enter a name and prompt.");
       return;
     }
 
@@ -48,27 +48,27 @@ export default function FormatsPage() {
       }
     } catch (error) {
       console.error("Failed to create format:", error);
-      alert("포맷 생성에 실패했습니다.");
+      alert("Failed to create format.");
     }
   };
 
   const defaultFormats = [
     {
-      name: "회의록 형식",
+      name: "Meeting Minutes",
       icon: "🎙️",
-      description: "참석자, 주요 안건, 결정 사항, 액션 아이템",
+      description: "Attendees, agenda items, decisions, action items",
       isDefault: true,
     },
     {
-      name: "인터뷰 기록 형식",
+      name: "Interview Notes",
       icon: "📝",
-      description: "Q&A 형식으로 질문과 답변을 정리",
+      description: "Q&A format with key insights",
       isDefault: true,
     },
     {
-      name: "강의 요약본 형식",
+      name: "Lecture Summary",
       icon: "📚",
-      description: "핵심 개념과 주요 내용을 섹션별로 정리",
+      description: "Key concepts and section summaries",
       isDefault: true,
     },
   ];
@@ -97,7 +97,7 @@ export default function FormatsPage() {
                 />
               </svg>
             </button>
-            <h1 className="text-2xl font-bold text-gray-800">포맷 설정</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Format Settings</h1>
           </div>
         </div>
       </header>
@@ -105,9 +105,9 @@ export default function FormatsPage() {
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-6 py-8 space-y-6">
         {/* Default Formats */}
-        <div className="glass-card p-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">
-            기본 포맷
+        <div className="card p-6">
+          <h2 className="text-xl font-bold text-slate-900 mb-4">
+            Default Formats
           </h2>
           <div className="space-y-3">
             {defaultFormats.map((format, idx) => (
@@ -117,8 +117,8 @@ export default function FormatsPage() {
               >
                 <div className="text-3xl">{format.icon}</div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-800">{format.name}</h3>
-                  <p className="text-sm text-gray-600">{format.description}</p>
+                  <h3 className="font-bold text-slate-900">{format.name}</h3>
+                  <p className="text-sm text-slate-500">{format.description}</p>
                 </div>
               </div>
             ))}
@@ -126,26 +126,26 @@ export default function FormatsPage() {
         </div>
 
         {/* Custom Formats */}
-        <div className="glass-card p-6">
+        <div className="card p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-800">
-              커스텀 포맷
+            <h2 className="text-xl font-bold text-slate-900">
+              Custom Formats
             </h2>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="glass-button"
+              className="btn-primary py-2 px-4 shadow-lg shadow-slate-900/10 text-sm"
             >
-              + 새 포맷 만들기
+              + Create New Format
             </button>
           </div>
 
           {loading ? (
-            <div className="text-center py-8 text-gray-600">로딩 중...</div>
+            <div className="text-center py-8 text-slate-500">Loading...</div>
           ) : formats.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-4xl mb-2">📝</div>
-              <p className="text-gray-600">
-                커스텀 포맷이 없습니다. 새로 만들어보세요!
+              <p className="text-slate-500">
+                No custom formats yet. Create one!
               </p>
             </div>
           ) : (
@@ -157,10 +157,10 @@ export default function FormatsPage() {
                 >
                   <div className="text-3xl">📄</div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-800">
+                    <h3 className="font-bold text-slate-900">
                       {format.name}
                     </h3>
-                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                    <p className="text-sm text-slate-500 mt-1 line-clamp-2">
                       {format.prompt.substring(0, 100)}...
                     </p>
                   </div>
@@ -173,16 +173,16 @@ export default function FormatsPage() {
 
       {/* Create Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
-          <div className="glass-card p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">
-              새 포맷 만들기
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-6 z-50 animate-fade-in">
+          <div className="bg-white rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-slide-up">
+            <h2 className="text-2xl font-bold text-slate-900 mb-6">
+              Create New Format
             </h2>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  포맷 이름
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  Format Name
                 </label>
                 <input
                   type="text"
@@ -190,26 +190,26 @@ export default function FormatsPage() {
                   onChange={(e) =>
                     setNewFormat({ ...newFormat, name: e.target.value })
                   }
-                  placeholder="예: 팀 회고록"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all placeholder:text-slate-400"
+                  placeholder="e.g., Meeting Minutes"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  AI 프롬프트
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  AI Prompt
                 </label>
                 <textarea
                   value={newFormat.prompt}
                   onChange={(e) =>
                     setNewFormat({ ...newFormat, prompt: e.target.value })
                   }
-                  placeholder={`다음 녹취록을 정리해주세요:\n\n{{transcript}}\n\n## 포맷\n...\n\n템플릿 변수: {{transcript}}, {{date}}`}
+                  placeholder={`Please summarize the transcript:\n\n{{transcript}}\n\n## Format\n...\n\nTemplate variables: {{transcript}}, {{date}}`}
                   rows={12}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all placeholder:text-slate-400 font-mono text-sm"
                 />
-                <p className="text-sm text-gray-600 mt-2">
-                  사용 가능한 변수: {"{"}
+                <p className="text-sm text-slate-500 mt-2">
+                  Available variables: {"{"}
                   {"{"}transcript{"}"} {"}"}, {"{"}
                   {"{"}date{"}"}
                   {"}"}
@@ -223,12 +223,16 @@ export default function FormatsPage() {
                   setShowCreateModal(false);
                   setNewFormat({ name: "", prompt: "" });
                 }}
-                className="flex-1 py-3 px-4 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                className="flex-1 py-3 px-4 border border-slate-200 text-slate-600 rounded-lg font-bold hover:bg-slate-50 transition-colors"
               >
-                취소
+                Cancel
               </button>
-              <button onClick={createFormat} className="flex-1 glass-button">
-                생성
+              <button
+                onClick={createFormat}
+                disabled={!newFormat.name || !newFormat.prompt}
+                className="btn-primary w-full shadow-lg shadow-slate-900/10 hover:shadow-slate-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Create Format
               </button>
             </div>
           </div>

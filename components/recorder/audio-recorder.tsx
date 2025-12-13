@@ -117,13 +117,13 @@ export function AudioRecorder({ onRecordingComplete, format }: AudioRecorderProp
     <div className="w-full flex flex-col items-center justify-center space-y-10">
       {/* Timer */}
       <div className="text-center space-y-2">
-        <div className={`text-7xl font-bold tracking-tighter font-mono ${isRecording ? 'text-indigo-600' : 'text-slate-800'}`}>
+        <div className={`text-7xl font-bold tracking-tighter font-mono ${isRecording ? 'text-red-500' : 'text-slate-800'}`}>
           {formatDuration(duration)}
         </div>
         <div className="h-6 flex items-center justify-center">
           {isRecording && !isPaused ? (
-            <div className="flex items-center gap-2 text-indigo-600 animate-pulse">
-              <div className="w-2 h-2 rounded-full bg-indigo-600" />
+            <div className="flex items-center gap-2 text-red-500 animate-pulse">
+              <div className="w-2 h-2 rounded-full bg-red-500" />
               <span className="text-sm font-medium uppercase tracking-wider">Recording</span>
             </div>
           ) : isPaused ? (
@@ -145,7 +145,7 @@ export function AudioRecorder({ onRecordingComplete, format }: AudioRecorderProp
         {!isRecording ? (
           <button
             onClick={startRecording}
-            className="group relative flex items-center justify-center w-24 h-24 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-xl shadow-indigo-500/30 transition-all hover:scale-105 active:scale-95"
+            className="group relative flex items-center justify-center w-24 h-24 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-xl shadow-red-500/30 transition-all hover:scale-105 active:scale-95"
             aria-label="Start Recording"
           >
             <div className="absolute inset-0 rounded-full border-2 border-white/20 group-hover:border-white/40 transition-colors" />

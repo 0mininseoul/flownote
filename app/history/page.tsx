@@ -197,8 +197,8 @@ export default function HistoryPage() {
                 key={item.value}
                 onClick={() => setFilter(item.value as any)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${filter === item.value
-                    ? "bg-slate-900 text-white shadow-md"
-                    : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                  ? "bg-slate-900 text-white shadow-md"
+                  : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
                   }`}
               >
                 {item.label}
@@ -211,7 +211,7 @@ export default function HistoryPage() {
         {loading ? (
           <div className="card p-12 text-center">
             <div className="flex justify-center mb-4">
-              <div className="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" />
+              <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
             </div>
             <p className="text-slate-500">Loading recordings...</p>
           </div>
@@ -232,7 +232,7 @@ export default function HistoryPage() {
         ) : (
           <div className="grid gap-4">
             {filteredRecordings.map((recording) => (
-              <div key={recording.id} className="card p-6 hover:border-indigo-200 transition-colors">
+              <div key={recording.id} className="card p-6 hover:border-slate-300 transition-colors">
                 <div className="flex items-start gap-4">
                   {/* Icon */}
                   <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-2xl flex-shrink-0">
@@ -249,13 +249,13 @@ export default function HistoryPage() {
                               type="text"
                               value={editingTitle}
                               onChange={(e) => setEditingTitle(e.target.value)}
-                              className="flex-1 px-3 py-1.5 border border-indigo-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                              className="flex-1 px-3 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 text-sm"
                               placeholder="Enter title"
                               autoFocus
                             />
                             <button
                               onClick={() => saveTitle(recording.id)}
-                              className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700"
+                              className="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800"
                             >
                               Save
                             </button>
@@ -268,7 +268,7 @@ export default function HistoryPage() {
                           </div>
                         ) : (
                           <h3
-                            className="text-lg font-bold text-slate-900 truncate cursor-pointer hover:text-indigo-600 transition-colors"
+                            className="text-lg font-bold text-slate-900 truncate cursor-pointer hover:text-blue-600 transition-colors"
                             onClick={() => startEditingTitle(recording.id, recording.title)}
                             title="Click to edit"
                           >

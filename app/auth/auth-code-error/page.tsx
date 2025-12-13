@@ -10,7 +10,7 @@ function AuthCodeErrorContent() {
   const message = searchParams.get("message") || "인증 중 오류가 발생했습니다.";
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+    <div className="min-h-screen flex items-center justify-center bg-slate-950">
       <div className="max-w-md w-full mx-4">
         <div className="glass-card p-8 text-center">
           <div className="mb-6">
@@ -35,7 +35,7 @@ function AuthCodeErrorContent() {
 
           <button
             onClick={() => router.push("/")}
-            className="glass-button w-full text-lg"
+            className="w-full py-3 px-4 bg-white text-slate-900 rounded-lg font-bold hover:bg-slate-100 transition-colors"
           >
             홈으로 돌아가기
           </button>
@@ -49,7 +49,7 @@ export default function AuthCodeError() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+        <div className="min-h-screen flex items-center justify-center bg-slate-950">
           <div className="text-white">로딩 중...</div>
         </div>
       }

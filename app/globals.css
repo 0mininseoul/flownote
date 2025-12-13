@@ -4,7 +4,8 @@
 
 @layer base {
   body {
-    @apply bg-white text-slate-900 antialiased;
+    @apply bg-white text-slate-900 antialiased font-sans;
+    font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
   }
 }
 
@@ -14,11 +15,15 @@
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center px-6 py-3 rounded-full bg-gradient-primary text-white font-medium shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/40 hover:-translate-y-0.5 transition-all duration-300;
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-full bg-gradient-primary text-white font-medium shadow-lg shadow-slate-900/30 hover:shadow-slate-900/40 hover:-translate-y-0.5 transition-all duration-300;
   }
-  
+
   .btn-secondary {
     @apply inline-flex items-center justify-center px-6 py-3 rounded-full bg-white border border-slate-200 text-slate-700 font-medium hover:bg-slate-50 hover:border-slate-300 transition-all duration-300;
+  }
+
+  .btn-nav {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-all duration-300;
   }
 
   .container-custom {

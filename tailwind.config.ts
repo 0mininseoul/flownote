@@ -10,9 +10,9 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#6366f1", // Indigo 500
-          light: "#818cf8",   // Indigo 400
-          dark: "#4f46e5",    // Indigo 600
+          DEFAULT: "#0f172a", // Slate 900 (Black)
+          light: "#1e3a5f",   // Deep Blue
+          dark: "#0a1929",    // Dark Navy
           foreground: "#ffffff",
         },
         secondary: {
@@ -20,13 +20,13 @@ const config: Config = {
           foreground: "#0f172a", // Slate 900
         },
         accent: {
-          DEFAULT: "#ec4899", // Pink 500
+          DEFAULT: "#3b82f6", // Blue 500
           foreground: "#ffffff",
         },
       },
       backgroundImage: {
-        "gradient-primary": "linear-gradient(to right, #6366f1, #8b5cf6)", // Indigo to Violet
-        "gradient-glow": "radial-gradient(circle at center, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
+        "gradient-primary": "linear-gradient(to right, #0f172a, #1e3a5f)", // Black to Deep Blue
+        "gradient-glow": "radial-gradient(circle at center, rgba(30, 58, 95, 0.15) 0%, transparent 70%)",
       },
       animation: {
         "fade-in": "fadeIn 0.5s ease-out forwards",

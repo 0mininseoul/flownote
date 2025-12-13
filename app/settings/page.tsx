@@ -19,10 +19,20 @@ interface NotionPage {
 
 export default function SettingsPage() {
   const router = useRouter();
-  const [usage, setUsage] = useState({ used: 0, limit: 350 });
+
+  // State definitions
+  const [usage, setUsage] = useState({ used: 0, limit: 350, total: 0 });
   const [userEmail, setUserEmail] = useState("");
   const [loading, setLoading] = useState(true);
+
+  // Feature states
+  const [apiKey, setApiKey] = useState("");
+  const [isEditingKey, setIsEditingKey] = useState(false);
   const [notionConnected, setNotionConnected] = useState(false);
+  const [slackConnected, setSlackConnected] = useState(false);
+  const [autoSave, setAutoSave] = useState(true);
+
+  // Notion database states
   const [notionDatabaseId, setNotionDatabaseId] = useState<string | null>(null);
   const [showDatabaseModal, setShowDatabaseModal] = useState(false);
   const [databases, setDatabases] = useState<NotionDatabase[]>([]);
@@ -37,11 +47,9 @@ export default function SettingsPage() {
   }, []);
 
   useEffect(() => {
-    // Check if returning from Notion OAuth and should open DB selector
     const params = new URLSearchParams(window.location.search);
     if (params.get("notion") === "connected" && params.get("selectDb") === "true") {
       openDatabaseModal();
-      // Clean up URL
       window.history.replaceState({}, "", "/settings");
     }
   }, []);
@@ -56,15 +64,35 @@ export default function SettingsPage() {
       const usageData = await usageResponse.json();
       const userData = await userResponse.json();
 
-      setUsage(usageData);
+      setUsage({
+        used: usageData.used || 0,
+        limit: usageData.limit || 350,
+        total: usageData.used || 0 // Ensuring compatibility
+      });
       setUserEmail(userData.email || "");
       setNotionConnected(!!userData.notion_access_token);
+      setSlackConnected(!!userData.slack_access_token); // Assuming this field exists
       setNotionDatabaseId(userData.notion_database_id || null);
     } catch (error) {
       console.error("Failed to fetch user data:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleConnect = (service: 'notion' | 'slack') => {
+    if (service === 'notion') {
+      window.location.href = "/api/auth/notion?returnTo=/settings&selectDb=true";
+    } else if (service === 'slack') {
+      window.location.href = "/api/auth/slack?returnTo=/settings";
+    }
+  };
+
+  const handleSaveApiKey = async () => {
+    // In a real app, you would save this to the backend
+    console.log("Saving API Key:", apiKey);
+    setIsEditingKey(false);
+    alert("API Key saved (simulated)");
   };
 
   const openDatabaseModal = async () => {
@@ -251,13 +279,16 @@ export default function SettingsPage() {
                       {Math.round((usage.used / usage.limit) * 100)}%
                     </span>
                   </div>
-                  <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                  <div className="w-full h-8 bg-slate-100 rounded-lg overflow-hidden flex items-center relative">
                     <div
-                      className="bg-indigo-600 h-full rounded-full transition-all duration-500"
-                      style={{
-                        width: `${Math.min((usage.used / usage.limit) * 100, 100)}%`,
-                      }}
-                    />
+                      className="h-full bg-slate-900 transition-all duration-500 relative group"
+                      style={{ width: `${(usage.total / usage.limit) * 100}%` }}
+                    >
+                      <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                    <div className="absolute right-4 text-xs font-bold text-slate-500 mix-blend-multiply">
+                      {Math.round((usage.total / usage.limit) * 100)}% Used
+                    </div>
                   </div>
                 </div>
               </div>
@@ -270,9 +301,80 @@ export default function SettingsPage() {
               Integrations
             </h2>
             <div className="space-y-4">
+              {/* OpenAI API Key */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border border-slate-200 rounded-xl hover:border-blue-200 transition-colors">
+                <div className="flex items-center gap-4 mb-4 sm:mb-0">
+                  <div className="w-10 h-10 bg-slate-50 rounded-lg flex items-center justify-center text-2xl">
+                    🤖
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900">OpenAI API Key</h3>
+                    <p className="text-sm text-slate-500">
+                      Use your own OpenAI API key for transcription and summarization
+                    </p>
+                  </div>
+                </div>
+                {isEditingKey ? (
+                  <div className="w-full sm:w-auto flex-shrink-0">
+                    <input
+                      type="password"
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all text-sm"
+                      placeholder="sk-..."
+                    />
+                    <div className="flex justify-end gap-2 mt-2">
+                      <button
+                        onClick={() => {
+                          if (apiKey) {
+                            setIsEditingKey(false);
+                          }
+                        }}
+                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={handleSaveApiKey}
+                        className="p-2 text-slate-900 hover:bg-slate-50 rounded-lg transition-colors"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full sm:w-auto flex-shrink-0">
+                    {apiKey ? (
+                      <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <div className="font-mono text-slate-600 text-sm">
+                          {apiKey.slice(0, 4)}...{apiKey.slice(-4)}
+                        </div>
+                        <button
+                          onClick={() => setIsEditingKey(true)}
+                          className="text-sm font-bold text-slate-900 hover:text-blue-600 transition-colors"
+                        >
+                          Change Key
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setIsEditingKey(true)}
+                        className="px-4 py-2 bg-slate-900 text-white rounded-lg font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10 hover:shadow-slate-900/20 active:scale-95 w-full"
+                      >
+                        Add API Key
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
               {/* Notion */}
-              <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:border-indigo-200 transition-colors">
-                <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border border-slate-200 rounded-xl hover:border-blue-200 transition-colors">
+                <div className="flex items-center gap-4 mb-4 sm:mb-0">
                   <div className="w-10 h-10 bg-slate-50 rounded-lg flex items-center justify-center text-2xl">
                     📔
                   </div>
@@ -292,21 +394,21 @@ export default function SettingsPage() {
                     if (notionConnected) {
                       openDatabaseModal();
                     } else {
-                      window.location.href = "/api/auth/notion?returnTo=/settings&selectDb=true";
+                      handleConnect('notion');
                     }
                   }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${notionConnected
-                      ? "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
-                      : "bg-indigo-600 text-white hover:bg-indigo-700"
+                  className={`px-4 py-2 rounded-lg font-bold transition-all w-full sm:w-auto ${notionConnected
+                    ? "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+                    : "bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/10 hover:shadow-slate-900/20 active:scale-95"
                     }`}
                 >
-                  {notionConnected ? "Configure" : "Connect"}
+                  {notionConnected ? "Configure" : "Connect Notion"}
                 </button>
               </div>
 
               {/* Slack */}
-              <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:border-indigo-200 transition-colors">
-                <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border border-slate-200 rounded-xl hover:border-blue-200 transition-colors">
+                <div className="flex items-center gap-4 mb-4 sm:mb-0">
                   <div className="w-10 h-10 bg-slate-50 rounded-lg flex items-center justify-center text-2xl">
                     💬
                   </div>
@@ -316,10 +418,8 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 <button
-                  onClick={() =>
-                    (window.location.href = "/api/auth/slack?returnTo=/settings")
-                  }
-                  className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors"
+                  onClick={() => handleConnect('slack')}
+                  className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors w-full sm:w-auto"
                 >
                   Reconnect
                 </button>
@@ -341,8 +441,13 @@ export default function SettingsPage() {
                   </p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" defaultChecked className="sr-only peer" />
-                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={autoSave}
+                    onChange={(e) => setAutoSave(e.target.checked)}
+                  />
+                  <div className="w-14 h-7 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-slate-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-slate-900 border-2 border-transparent"></div>
                 </label>
               </div>
 
@@ -408,8 +513,8 @@ export default function SettingsPage() {
                 <button
                   onClick={() => setModalTab("select")}
                   className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${modalTab === "select"
-                      ? "bg-white text-slate-900 shadow-sm"
-                      : "text-slate-500 hover:text-slate-700"
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700"
                     }`}
                 >
                   Select Existing
@@ -417,8 +522,8 @@ export default function SettingsPage() {
                 <button
                   onClick={() => setModalTab("create")}
                   className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${modalTab === "create"
-                      ? "bg-white text-slate-900 shadow-sm"
-                      : "text-slate-500 hover:text-slate-700"
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700"
                     }`}
                 >
                   Create New
@@ -430,7 +535,7 @@ export default function SettingsPage() {
             <div className="p-6 overflow-y-auto max-h-[calc(80vh-200px)]">
               {modalLoading ? (
                 <div className="flex justify-center py-12">
-                  <div className="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" />
+                  <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
                 </div>
               ) : modalTab === "select" ? (
                 <div className="space-y-3">
@@ -441,7 +546,7 @@ export default function SettingsPage() {
                       </p>
                       <button
                         onClick={() => setModalTab("create")}
-                        className="text-indigo-600 hover:text-indigo-700 font-medium"
+                        className="text-blue-600 hover:text-blue-700 font-bold"
                       >
                         Create a new database →
                       </button>
@@ -451,9 +556,9 @@ export default function SettingsPage() {
                       <button
                         key={db.id}
                         onClick={() => selectDatabase(db.id)}
-                        className="w-full p-4 border border-slate-200 rounded-xl hover:border-indigo-600 hover:bg-indigo-50 transition-all text-left group"
+                        className="w-full p-4 border border-slate-200 rounded-xl hover:border-slate-900 hover:bg-slate-50 transition-all text-left group"
                       >
-                        <div className="font-bold text-slate-900 mb-1 group-hover:text-indigo-700">
+                        <div className="font-bold text-slate-900 mb-1 group-hover:text-slate-700">
                           {db.title}
                         </div>
                         <div className="text-xs text-slate-500">
@@ -473,7 +578,7 @@ export default function SettingsPage() {
                       type="text"
                       value={newDbTitle}
                       onChange={(e) => setNewDbTitle(e.target.value)}
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none transition-all"
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition-all"
                       placeholder="Flownote Recordings"
                     />
                   </div>
@@ -493,8 +598,8 @@ export default function SettingsPage() {
                             key={page.id}
                             onClick={() => setSelectedPageId(page.id)}
                             className={`w-full p-3 border rounded-lg transition-all text-left ${selectedPageId === page.id
-                                ? "border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600"
-                                : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                              ? "border-slate-900 bg-slate-50 ring-1 ring-slate-900"
+                              : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
                               }`}
                           >
                             <div className="font-medium text-slate-900">
@@ -512,7 +617,7 @@ export default function SettingsPage() {
                   <button
                     onClick={createDatabase}
                     disabled={!selectedPageId || modalLoading}
-                    className="w-full px-4 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/20"
+                    className="w-full px-4 py-3 bg-slate-900 text-white rounded-lg font-bold hover:bg-slate-800 transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed shadow-lg shadow-slate-900/10"
                   >
                     Create Database
                   </button>

@@ -87,7 +87,7 @@ export default function DashboardPage() {
           {isUploading ? (
             <div className="card p-12 text-center space-y-6 animate-fade-in">
               <div className="flex justify-center">
-                <div className="w-16 h-16 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" />
+                <div className="w-16 h-16 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
               </div>
               <div className="space-y-2">
                 <h2 className="text-2xl font-bold text-slate-900">
