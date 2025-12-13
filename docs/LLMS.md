@@ -16,8 +16,8 @@
 | 기능 | 설명 |
 |------|------|
 | **원클릭 녹음** | 웹 브라우저에서 최대 120분 녹음 |
-| **자동 STT** | WhisperAPI를 통한 음성→텍스트 변환 |
-| **AI 문서 정리** | GPT-4o-mini로 회의록/인터뷰/강의 형식으로 자동 정리 |
+| **자동 STT** | Groq Whisper Large V3를 통한 음성→텍스트 변환 |
+| **AI 문서 정리** | GPT-4o-mini로 문서 자동 정리 (기본 포맷: meeting) |
 | **Notion 연동** | 정리된 문서를 Notion 페이지로 자동 생성 |
 | **Slack 알림** | 처리 완료 시 Slack 메시지 전송 |
 | **PWA 지원** | 모바일 홈 화면 추가 가능 |
@@ -43,7 +43,7 @@
 
 ### 2.3 외부 API
 ```
-- WhisperAPI.com (STT 변환)
+- Groq API (Whisper Large V3 STT 변환)
 - OpenAI GPT-4o-mini (문서 정리)
 - Notion API (페이지 생성)
 - Slack API (메시지 전송)
@@ -195,29 +195,28 @@ created_at TIMESTAMP
 
 ### 6.1 녹음 → 문서화 파이프라인
 ```
-1. 웹 녹음 (MediaRecorder API, WebM)
+1. 웹 녹음 (MediaRecorder API, WebM/MP4/OGG)
        ↓
 2. Supabase Storage 업로드
        ↓
-3. WhisperAPI (STT 변환)
+3. Groq API (Whisper Large V3 STT 변환)
        ↓
 4. Supabase DB (트랜스크립트 저장)
        ↓
-5. OpenAI GPT-4o-mini (포맷별 문서 정리)
+5. OpenAI GPT-4o-mini (문서 정리 - 기본 포맷: meeting)
        ↓
-6. Notion API (페이지 생성 + 오디오 첨부)
+6. Notion API (페이지 생성 + 오디오 첨부, 선택사항)
        ↓
-7. Slack API (완료 알림 + Notion 링크)
+7. Slack API (완료 알림 + Notion 링크, 선택사항)
 ```
 
 ### 6.2 문서 포맷 종류
 
 **기본 포맷:**
-1. **meeting (회의록)**: 참석자, 주요 안건, 결정 사항, 액션 아이템
-2. **interview (인터뷰)**: Q&A 형식, 핵심 인사이트
-3. **lecture (강의)**: 섹션별 요약, 핵심 요점 정리
+- **meeting (회의록)**: 참석자, 주요 안건, 결정 사항, 액션 아이템 (기본값, UI에서 고정)
+- **참고**: meeting/interview/lecture 포맷은 코드 레벨에서 지원하지만, 현재 UI에서는 meeting만 사용됨
 
-**커스텀 포맷:** 사용자가 직접 프롬프트 정의 가능
+**커스텀 포맷:** 사용자가 설정 페이지에서 직접 프롬프트를 정의하여 사용 가능
 
 ---
 
@@ -227,7 +226,7 @@ created_at TIMESTAMP
 |------|------|----------|
 | `/` | 랜딩 페이지 | 서비스 소개, Google 로그인, 다국어 지원 |
 | `/onboarding` | 온보딩 | Notion/Slack 연동, 기본 포맷 선택 |
-| `/dashboard` | 대시보드 | 녹음 버튼, 타이머, 포맷 선택, 사용량 |
+| `/dashboard` | 대시보드 | 녹음 버튼, 타이머, 사용량 (기본 포맷: meeting) |
 | `/history` | 히스토리 | 녹음 목록, 처리 상태, Notion 링크 |
 | `/settings` | 설정 | 계정 정보, 통합 관리, 언어 설정, 데이터 삭제 |
 | `/settings/formats` | 포맷 설정 | 커스텀 포맷 CRUD |
@@ -253,8 +252,8 @@ SUPABASE_SERVICE_ROLE_KEY=
 # OpenAI
 OPENAI_API_KEY=
 
-# WhisperAPI
-WHISPER_API_KEY=
+# Groq API (Whisper Large V3 STT)
+GROQ_API_KEY=
 
 # Notion OAuth
 NOTION_CLIENT_ID=
