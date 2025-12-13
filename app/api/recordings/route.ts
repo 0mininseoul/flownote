@@ -57,35 +57,13 @@ export async function POST(request: NextRequest) {
     // Generate title
     const title = `Flownote - ${formatKSTDate()}`;
 
-    // Upload audio to Supabase Storage
-    // Determine file extension from the uploaded file type (supports webm, mp4, ogg)
-    const fileExtension = audioFile.type.includes("mp4") ? "mp4" :
-                          audioFile.type.includes("ogg") ? "ogg" : "webm";
-    const fileName = `${user.id}/${Date.now()}.${fileExtension}`;
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("recordings")
-      .upload(fileName, audioFile);
-
-    if (uploadError) {
-      console.error("Upload error:", uploadError);
-      return NextResponse.json(
-        { error: "Failed to upload audio" },
-        { status: 500 }
-      );
-    }
-
-    // Get public URL
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("recordings").getPublicUrl(fileName);
-
-    // Create recording record
+    // Create recording record (audio file will not be stored)
     const { data: recording, error: recordingError } = await supabase
       .from("recordings")
       .insert({
         user_id: user.id,
         title,
-        audio_file_path: fileName,
+        audio_file_path: null, // Audio files are not stored - only transcript is saved
         duration_seconds: duration,
         format,
         status: "processing",
@@ -102,14 +80,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Process in background (in production, use a queue)
+    // Audio file is sent directly to Groq API and not stored
     processRecording(
       recording.id,
       audioFile,
       format as keyof typeof FORMAT_PROMPTS,
       duration,
       userData,
-      title,
-      publicUrl
+      title
     ).catch(async (error) => {
       console.error(`[${recording.id}] Critical error in processRecording:`, error);
       // Update status to failed if uncaught error
@@ -176,19 +154,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Add audio URLs to recordings
-    const recordingsWithUrls = recordings?.map((recording) => {
-      const { data } = supabase.storage
-        .from("recordings")
-        .getPublicUrl(recording.audio_file_path);
-
-      return {
-        ...recording,
-        audio_url: data.publicUrl,
-      };
-    });
-
-    return NextResponse.json({ recordings: recordingsWithUrls });
+    // Audio files are not stored, so no audio_url is returned
+    return NextResponse.json({ recordings });
   } catch (error) {
     console.error("API error:", error);
     return NextResponse.json(
@@ -199,14 +166,14 @@ export async function GET(request: NextRequest) {
 }
 
 // Background processing function with detailed error tracking
+// Audio file is sent directly to Groq API and discarded after transcription
 async function processRecording(
   recordingId: string,
   audioFile: File,
   format: keyof typeof FORMAT_PROMPTS,
   duration: number,
   userData: any,
-  title: string,
-  audioUrl: string
+  title: string
 ) {
   const supabase = await createClient();
 
@@ -283,6 +250,7 @@ async function processRecording(
     }
 
     // Step 3: Create Notion page (optional)
+    // Note: Audio file is not attached to Notion page (only text content)
     let notionUrl = "";
     if (userData.notion_access_token && userData.notion_database_id) {
       try {
@@ -293,8 +261,7 @@ async function processRecording(
           title,
           formattedContent,
           format,
-          duration,
-          audioUrl
+          duration
         );
 
         await supabase

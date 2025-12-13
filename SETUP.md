@@ -85,16 +85,13 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 1. `database/migrations/add_language.sql` - 사용자 언어 설정 컬럼 추가
 2. `database/migrations/add_is_onboarded.sql` - 온보딩 완료 플래그 추가
+3. `database/migrations/make_audio_file_path_nullable.sql` - 오디오 파일 경로 nullable로 변경 (오디오 파일 저장 안 함)
 
 각 파일의 내용을 SQL Editor에서 실행합니다.
 
 ### 4.3 Storage Bucket 생성
 
-1. Supabase Dashboard > Storage를 엽니다.
-2. "Create bucket"을 클릭합니다.
-3. 이름: `recordings`
-4. Public: `false`
-5. "Save"를 클릭합니다.
+**참고:** 오디오 파일은 저장하지 않습니다. Groq API로 전송 후 즉시 폐기되며, 텍스트(전사 결과)만 데이터베이스에 저장됩니다. Storage Bucket 생성은 필요하지 않습니다.
 
 ### 4.4 Google OAuth 설정
 

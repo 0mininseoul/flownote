@@ -26,7 +26,7 @@ Flownote는 음성 녹음을 자동으로 텍스트로 변환하고, AI가 정�
 
 ### Backend
 - **Next.js API Routes** (서버리스)
-- **Supabase** (PostgreSQL + Auth + Storage)
+- **Supabase** (PostgreSQL + Auth, 오디오 파일 저장 안 함)
 
 ### 외부 API
 - **WhisperAPI.com** (STT)
@@ -91,6 +91,7 @@ Supabase 대시보드에서 SQL 에디터를 열고 다음 파일들을 순서�
 1. `database/schema.sql` - 기본 스키마 생성
 2. `database/migrations/add_language.sql` - 언어 설정 컬럼 추가
 3. `database/migrations/add_is_onboarded.sql` - 온보딩 완료 플래그 추가
+4. `database/migrations/make_audio_file_path_nullable.sql` - 오디오 파일 경로 nullable로 변경 (오디오 파일 저장 안 함)
 
 기본 스키마는 다음을 생성합니다:
 - `users` 테이블
@@ -101,9 +102,7 @@ Supabase 대시보드에서 SQL 에디터를 열고 다음 파일들을 순서�
 
 ### 3. Supabase Storage 설정
 
-Supabase 대시보드에서 Storage > Create bucket:
-- Bucket name: `recordings`
-- Public: `false`
+**참고:** 오디오 파일은 저장하지 않습니다. Groq API로 전송 후 즉시 폐기되며, 텍스트(전사 결과)만 데이터베이스에 저장됩니다.
 
 ### 4. Google OAuth 설정
 

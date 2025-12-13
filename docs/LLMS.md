@@ -127,17 +127,19 @@ created_at            TIMESTAMP
 id                UUID PRIMARY KEY
 user_id           UUID REFERENCES users(id)
 title             TEXT NOT NULL
-audio_file_path   TEXT NOT NULL            -- Supabase Storage 경로
+audio_file_path   TEXT                     -- NULL (오디오 파일은 저장하지 않음)
 duration_seconds  INTEGER NOT NULL
 format            TEXT CHECK (meeting|interview|lecture|custom)
 status            TEXT CHECK (processing|completed|failed)
-transcript        TEXT                     -- STT 결과
+transcript        TEXT                     -- STT 결과 (Groq API에서 받은 텍스트)
 formatted_content TEXT                     -- AI 정리 결과
 notion_page_url   TEXT
 error_message     TEXT
 error_step        TEXT CHECK (upload|transcription|formatting|notion|slack)
 created_at        TIMESTAMP
 ```
+
+**참고:** 오디오 파일은 Groq API로 전송 후 즉시 폐기되며, 텍스트(전사 결과)만 데이터베이스에 저장됩니다.
 
 ### 4.3 custom_formats 테이블
 ```sql
@@ -195,20 +197,25 @@ created_at TIMESTAMP
 
 ### 6.1 녹음 → 문서화 파이프라인
 ```
-1. 웹 녹음 (MediaRecorder API, WebM/MP4/OGG)
+1. 브라우저: 녹음 완료 (Blob 생성)
        ↓
-2. Supabase Storage 업로드
+2. Next.js 서버: FormData로 오디오 파일 수신 (메모리에 잠시 보관)
        ↓
-3. Groq API (Whisper Large V3 STT 변환)
+3. Groq API: 서버가 받은 파일을 즉시 Groq로 전송 (POST) - 오디오 파일 폐기
        ↓
-4. Supabase DB (트랜스크립트 저장)
+4. Supabase DB: 텍스트(전사 결과)만 저장
        ↓
-5. OpenAI GPT-4o-mini (문서 정리 - 기본 포맷: meeting)
+5. OpenAI GPT-4o-mini: 텍스트 요약 및 정리 (기본 포맷: meeting)
        ↓
-6. Notion API (페이지 생성 + 오디오 첨부, 선택사항)
+6. Notion API: 텍스트만 저장 (오디오 파일 없음, 선택사항)
        ↓
-7. Slack API (완료 알림 + Notion 링크, 선택사항)
+7. Slack API: 완료 알림 + Notion 링크 (선택사항)
 ```
+
+**주요 특징:**
+- ⚡ 속도 최적화: 스토리지 업로드 시간 절약
+- 💰 비용 절감: Supabase Storage 용량 사용 안 함
+- 🔒 개인정보 보호: 음성 원본을 저장하지 않음
 
 ### 6.2 문서 포맷 종류
 

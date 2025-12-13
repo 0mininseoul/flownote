@@ -6,24 +6,13 @@ export async function createNotionPage(
   title: string,
   content: string,
   format: string,
-  duration: number,
-  audioUrl?: string
+  duration: number
 ): Promise<string> {
   const notion = new Client({ auth: accessToken });
 
   // Convert markdown content to Notion blocks
+  // Note: Audio files are not stored or attached (only text content is saved)
   const blocks = convertMarkdownToBlocks(content);
-
-  // Add audio file if provided
-  if (audioUrl) {
-    blocks.push({
-      type: "file",
-      file: {
-        type: "external",
-        external: { url: audioUrl },
-      },
-    } as any);
-  }
 
   const response = await notion.pages.create({
     parent: { database_id: databaseId },
