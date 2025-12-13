@@ -2,40 +2,13 @@ import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { exchangeNotionCode } from "@/lib/services/notion";
 
-// Helper function to get the correct app URL
-function getAppUrl(request: NextRequest): string {
-  // Priority:
-  // 1. NEXT_PUBLIC_APP_URL environment variable (for production)
-  // 2. Vercel URL (for preview deployments)
-  // 3. Request origin (for local development)
-
-  if (process.env.NEXT_PUBLIC_APP_URL && process.env.NEXT_PUBLIC_APP_URL !== "http://localhost:3000") {
-    return process.env.NEXT_PUBLIC_APP_URL;
-  }
-
-  // For Vercel deployments, use the VERCEL_URL or request origin
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-
-  // Fallback to request origin
-  const origin = request.headers.get("origin") || request.headers.get("host");
-  if (origin) {
-    const protocol = origin.includes("localhost") ? "http" : "https";
-    return origin.startsWith("http") ? origin : `${protocol}://${origin}`;
-  }
-
-  // Final fallback
-  return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-}
-
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
   const error = searchParams.get("error");
   const state = searchParams.get("state");
 
-  const appUrl = getAppUrl(request);
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
   // Parse returnTo and selectDb from state
   let returnTo = "/onboarding";
@@ -75,7 +48,7 @@ export async function GET(request: NextRequest) {
 
     // Exchange code for access token
     // IMPORTANT: The redirect_uri must match exactly what was used in the initial auth request
-    const redirectUri = `${appUrl}/api/auth/notion/callback`;
+    const redirectUri = process.env.NOTION_REDIRECT_URI || `${appUrl}/api/auth/notion/callback`;
     console.log("[Notion Callback] Using redirect URI:", redirectUri);
 
     const { access_token } = await exchangeNotionCode(code, redirectUri);

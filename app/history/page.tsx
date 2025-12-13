@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Recording } from "@/types";
 import { formatDurationMinutes } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 
 export default function HistoryPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [recordings, setRecordings] = useState<Recording[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "processing" | "completed" | "failed">("all");
@@ -30,7 +32,7 @@ export default function HistoryPage() {
   };
 
   const deleteRecording = async (id: string) => {
-    if (!confirm("정말 삭제하시겠습니까?")) return;
+    if (!confirm(t.history.deleteConfirm)) return;
 
     try {
       const response = await fetch(`/api/recordings/${id}`, {
@@ -42,7 +44,7 @@ export default function HistoryPage() {
       }
     } catch (error) {
       console.error("Failed to delete recording:", error);
-      alert("삭제에 실패했습니다.");
+      alert(t.history.deleteFailed);
     }
   };
 
@@ -53,7 +55,7 @@ export default function HistoryPage() {
 
   const saveTitle = async (id: string) => {
     if (!editingTitle.trim()) {
-      alert("제목을 입력해주세요.");
+      alert(t.history.titleRequired);
       return;
     }
 
@@ -74,7 +76,7 @@ export default function HistoryPage() {
       }
     } catch (error) {
       console.error("Failed to update title:", error);
-      alert("제목 수정에 실패했습니다.");
+      alert(t.history.titleUpdateFailed);
     }
   };
 
@@ -104,30 +106,30 @@ export default function HistoryPage() {
   const getStatusText = (status: string) => {
     switch (status) {
       case "completed":
-        return "처리 완료";
+        return t.history.status.completed;
       case "processing":
-        return "처리 중...";
+        return t.history.status.processing;
       case "failed":
-        return "처리 실패";
+        return t.history.status.failed;
       default:
-        return "대기 중";
+        return t.history.status.pending;
     }
   };
 
   const getErrorStepText = (errorStep?: string) => {
     switch (errorStep) {
       case "transcription":
-        return "음성 전사 단계";
+        return t.history.errorSteps.transcription;
       case "formatting":
-        return "AI 포맷팅 단계";
+        return t.history.errorSteps.formatting;
       case "notion":
-        return "Notion 연동 단계";
+        return t.history.errorSteps.notion;
       case "slack":
-        return "Slack 알림 단계";
+        return t.history.errorSteps.slack;
       case "upload":
-        return "파일 업로드 단계";
+        return t.history.errorSteps.upload;
       default:
-        return "알 수 없는 단계";
+        return t.history.errorSteps.unknown;
     }
   };
 
@@ -183,15 +185,15 @@ export default function HistoryPage() {
       {/* Main Content */}
       <main className="container-custom py-8 flex-1">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <h1 className="text-2xl font-bold text-slate-900">Recording History</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t.history.title}</h1>
 
           {/* Filter */}
           <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0">
             {[
-              { value: "all", label: "All" },
-              { value: "processing", label: "Processing" },
-              { value: "completed", label: "Completed" },
-              { value: "failed", label: "Failed" },
+              { value: "all", label: t.history.filters.all },
+              { value: "processing", label: t.history.filters.processing },
+              { value: "completed", label: t.history.filters.completed },
+              { value: "failed", label: t.history.filters.failed },
             ].map((item) => (
               <button
                 key={item.value}
@@ -213,20 +215,20 @@ export default function HistoryPage() {
             <div className="flex justify-center mb-4">
               <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
             </div>
-            <p className="text-slate-500">Loading recordings...</p>
+            <p className="text-slate-500">{t.common.loading}</p>
           </div>
         ) : filteredRecordings.length === 0 ? (
           <div className="card p-16 text-center">
             <div className="text-6xl mb-6 opacity-50">📝</div>
             <h3 className="text-xl font-bold text-slate-900 mb-2">
-              No recordings found
+              {t.history.noRecordings}
             </h3>
-            <p className="text-slate-500 mb-8">Start your first recording to see it here.</p>
+            <p className="text-slate-500 mb-8">{t.history.noRecordingsDesc}</p>
             <button
               onClick={() => router.push("/dashboard")}
               className="btn-primary"
             >
-              Start Recording
+              {t.history.startRecording}
             </button>
           </div>
         ) : (
@@ -250,20 +252,19 @@ export default function HistoryPage() {
                               value={editingTitle}
                               onChange={(e) => setEditingTitle(e.target.value)}
                               className="flex-1 px-3 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 text-sm"
-                              placeholder="Enter title"
                               autoFocus
                             />
                             <button
                               onClick={() => saveTitle(recording.id)}
                               className="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800"
                             >
-                              Save
+                              {t.common.save}
                             </button>
                             <button
                               onClick={cancelEditing}
                               className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200"
                             >
-                              Cancel
+                              {t.common.cancel}
                             </button>
                           </div>
                         ) : (
@@ -309,7 +310,7 @@ export default function HistoryPage() {
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
-                                <span>전사본 보기</span>
+                                <span>{t.history.viewTranscript}</span>
                               </button>
                             )}
                           </>
@@ -323,7 +324,7 @@ export default function HistoryPage() {
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
-                            <span>전사본 보기</span>
+                            <span>{t.history.viewTranscript}</span>
                           </button>
                         )}
 
@@ -346,8 +347,8 @@ export default function HistoryPage() {
                           <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
-                          <span className="text-xs font-medium text-slate-500">전사본 미리보기</span>
-                          <span className="text-xs text-slate-400">(오디오 파일은 저장되지 않습니다)</span>
+                          <span className="text-xs font-medium text-slate-500">{t.history.transcriptPreview}</span>
+                          <span className="text-xs text-slate-400">({t.history.audioNotStored})</span>
                         </div>
                         <p className="text-sm text-slate-700 line-clamp-3">
                           {recording.transcript}
@@ -356,7 +357,7 @@ export default function HistoryPage() {
                           onClick={() => router.push(`/recordings/${recording.id}`)}
                           className="mt-2 text-xs text-blue-600 hover:text-blue-700 font-medium"
                         >
-                          전체 보기 →
+                          {t.history.viewAll} →
                         </button>
                       </div>
                     )}
@@ -368,7 +369,7 @@ export default function HistoryPage() {
                           <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                           </svg>
-                          <span>음성을 텍스트로 변환 중입니다. 오디오 파일은 저장되지 않습니다.</span>
+                          <span>{t.history.processingInfo}</span>
                         </div>
                       </div>
                     )}

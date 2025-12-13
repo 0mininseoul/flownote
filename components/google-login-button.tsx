@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 
 interface GoogleLoginButtonProps {
-  variant?: "nav" | "primary";
+  variant?: "nav" | "primary" | "cta";
 }
 
 export function GoogleLoginButton({ variant = "nav" }: GoogleLoginButtonProps) {
@@ -14,7 +14,8 @@ export function GoogleLoginButton({ variant = "nav" }: GoogleLoginButtonProps) {
     const supabase = createClient();
 
     // Include locale in redirectTo to preserve language preference
-    const redirectTo = `${window.location.origin}/api/auth/callback?next=/onboarding&locale=${locale}`;
+    // Don't specify 'next' - let auth callback determine based on user status (new vs existing)
+    const redirectTo = `${window.location.origin}/api/auth/callback?locale=${locale}`;
 
     await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -28,12 +29,22 @@ export function GoogleLoginButton({ variant = "nav" }: GoogleLoginButtonProps) {
     });
   };
 
-  const buttonClass = variant === "primary" ? "btn-primary" : "btn-nav";
+  const getButtonClass = () => {
+    switch (variant) {
+      case "primary":
+        return "btn-primary";
+      case "cta":
+        return "inline-flex items-center gap-3 px-8 py-4 bg-white text-slate-900 rounded-xl font-bold text-lg hover:bg-slate-100 transition-all shadow-lg";
+      default:
+        return "btn-nav";
+    }
+  };
+
   const buttonText = variant === "primary" ? t.auth.getStarted : t.auth.signInWithGoogle;
 
   return (
-    <button onClick={handleLogin} className={buttonClass}>
-      <svg className="w-4 h-4" viewBox="0 0 24 24">
+    <button onClick={handleLogin} className={getButtonClass()}>
+      <svg className={variant === "cta" ? "w-6 h-6" : "w-4 h-4"} viewBox="0 0 24 24">
         <path
           fill="currentColor"
           d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
