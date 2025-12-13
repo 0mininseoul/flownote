@@ -114,13 +114,19 @@ export default function PrivacyPolicyPage() {
                   <strong>Supabase:</strong> 데이터베이스 호스팅 및 사용자 인증
                 </li>
                 <li>
-                  <strong>OpenAI:</strong> 음성 텍스트 변환 및 AI 처리
+                  <strong>Groq:</strong> 음성 텍스트 변환 (Whisper Large V3)
+                </li>
+                <li>
+                  <strong>OpenAI:</strong> AI 문서 정리 및 요약
                 </li>
                 <li>
                   <strong>Notion:</strong> 문서 저장 (사용자 직접 연동)
                 </li>
                 <li>
                   <strong>Slack:</strong> 알림 전송 (사용자 직접 연동)
+                </li>
+                <li>
+                  <strong>Google:</strong> 사용자 인증 (OAuth)
                 </li>
                 <li>
                   <strong>Vercel:</strong> 애플리케이션 호스팅

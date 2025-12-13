@@ -43,7 +43,7 @@ export const translations = {
         },
         summarization: {
           title: "AI 요약",
-          description: "GPT-4로 구조화된 회의록, 액션 아이템, 요약을 즉시 생성합니다.",
+          description: "구조화된 회의록, 액션 아이템, 요약을 즉시 생성합니다.",
         },
       },
       howItWorks: {
@@ -60,7 +60,7 @@ export const translations = {
           },
           organize: {
             title: "정리",
-            description: "GPT-4가 콘텐츠를 아름다운 문서로 구조화합니다.",
+            description: "AI가 콘텐츠를 아름다운 문서로 구조화합니다.",
           },
           share: {
             title: "공유",
@@ -77,7 +77,7 @@ export const translations = {
       },
       cta: {
         title: "오늘부터 아이디어를 기록하세요",
-        description: "자동화된 문서화로 매주 몇 시간을 절약하는 수천 명의 전문가와 함께하세요.",
+        description: "녹음 버튼 하나만 누르면 됩니다. 자동화된 문서화로 매주 몇 시간을 절약할 수 있어요!",
       },
       footer: {
         rights: "©2025 FLOWNOTE · All rights reserved.",
@@ -280,7 +280,7 @@ export const translations = {
         },
         summarization: {
           title: "AI Summarization",
-          description: "Get structured meeting notes, action items, and summaries instantly with GPT-4.",
+          description: "Get structured meeting notes, action items, and summaries instantly.",
         },
       },
       howItWorks: {
@@ -297,7 +297,7 @@ export const translations = {
           },
           organize: {
             title: "Organize",
-            description: "GPT-4 structures your content into beautiful documents.",
+            description: "AI structures your content into beautiful documents.",
           },
           share: {
             title: "Share",

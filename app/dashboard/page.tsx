@@ -107,7 +107,6 @@ export default function DashboardPage() {
             <div className="card p-8 md:p-12 shadow-lg animate-slide-up">
               <div className="text-center mb-8">
                 <h1 className="text-2xl font-bold text-slate-900">새 녹음</h1>
-                <p className="text-slate-500 mt-2">포맷을 선택하고 녹음을 시작하세요</p>
                 <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg max-w-md mx-auto">
                   <div className="flex items-start gap-2 text-xs text-blue-700">
                     <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

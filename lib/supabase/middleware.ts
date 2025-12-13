@@ -20,9 +20,8 @@ function detectLocale(request: NextRequest): "ko" | "en" {
     return "ko";
   }
 
-  // All other countries -> English
-  // This includes when country is null (local development)
-  return country ? "en" : "ko"; // Default to Korean for local dev
+  // Default to Korean for all cases
+  return "ko";
 }
 
 export async function updateSession(request: NextRequest) {
