@@ -94,19 +94,11 @@ export async function GET(request: Request) {
       }
     }
 
-    const forwardedHost = request.headers.get("x-forwarded-host");
-    const isLocalEnv = process.env.NODE_ENV === "development";
+    // Use NEXT_PUBLIC_APP_URL if available, otherwise fall back to origin
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || origin;
+    const redirectUrl = new URL(next || "/", appUrl);
 
-    let redirectUrl: string;
-    if (isLocalEnv) {
-      redirectUrl = `${origin}${next}`;
-    } else if (forwardedHost) {
-      redirectUrl = `https://${forwardedHost}${next}`;
-    } else {
-      redirectUrl = `${origin}${next}`;
-    }
-
-    console.log("[Auth Callback] Redirecting to:", redirectUrl);
+    console.log("[Auth Callback] Redirecting to:", redirectUrl.toString());
     console.log("[Auth Callback] Setting cookies:", cookiesToSetOnResponse.map(c => c.name));
 
     const response = NextResponse.redirect(redirectUrl);
