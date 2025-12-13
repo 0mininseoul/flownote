@@ -301,12 +301,17 @@ export default function HistoryPage() {
                                 </svg>
                               </a>
                             )}
-                            <button
-                              onClick={() => router.push(`/recordings/${recording.id}`)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all"
-                            >
-                              Details
-                            </button>
+                            {recording.transcript && (
+                              <button
+                                onClick={() => router.push(`/recordings/${recording.id}`)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <span>전사본 보기</span>
+                              </button>
+                            )}
                           </>
                         )}
 
@@ -315,7 +320,10 @@ export default function HistoryPage() {
                             onClick={() => router.push(`/recordings/${recording.id}`)}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all"
                           >
-                            View Transcript
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <span>전사본 보기</span>
                           </button>
                         )}
 
@@ -331,18 +339,37 @@ export default function HistoryPage() {
                       </div>
                     </div>
 
-                    {/* Audio Player */}
-                    {recording.audio_url && (
-                      <div className="mt-4 bg-slate-50 rounded-lg p-2">
-                        <audio
-                          controls
-                          className="w-full h-8"
-                          preload="metadata"
-                          style={{ maxWidth: "100%" }}
+                    {/* Transcript Preview (for completed recordings) */}
+                    {recording.status === "completed" && recording.transcript && (
+                      <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                        <div className="flex items-center gap-2 mb-2">
+                          <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          <span className="text-xs font-medium text-slate-500">전사본 미리보기</span>
+                          <span className="text-xs text-slate-400">(오디오 파일은 저장되지 않습니다)</span>
+                        </div>
+                        <p className="text-sm text-slate-700 line-clamp-3">
+                          {recording.transcript}
+                        </p>
+                        <button
+                          onClick={() => router.push(`/recordings/${recording.id}`)}
+                          className="mt-2 text-xs text-blue-600 hover:text-blue-700 font-medium"
                         >
-                          <source src={recording.audio_url} type="audio/webm" />
-                          Your browser does not support the audio element.
-                        </audio>
+                          전체 보기 →
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Processing Status Info */}
+                    {recording.status === "processing" && (
+                      <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                        <div className="flex items-center gap-2 text-sm text-blue-700">
+                          <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                          <span>음성을 텍스트로 변환 중입니다. 오디오 파일은 저장되지 않습니다.</span>
+                        </div>
                       </div>
                     )}
 

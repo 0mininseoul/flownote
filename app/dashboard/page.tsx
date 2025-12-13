@@ -108,6 +108,14 @@ export default function DashboardPage() {
               <div className="text-center mb-8">
                 <h1 className="text-2xl font-bold text-slate-900">새 녹음</h1>
                 <p className="text-slate-500 mt-2">포맷을 선택하고 녹음을 시작하세요</p>
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg max-w-md mx-auto">
+                  <div className="flex items-start gap-2 text-xs text-blue-700">
+                    <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>오디오 파일은 저장되지 않습니다. 음성은 텍스트로 변환된 후 즉시 폐기됩니다.</span>
+                  </div>
+                </div>
               </div>
 
               <AudioRecorder
