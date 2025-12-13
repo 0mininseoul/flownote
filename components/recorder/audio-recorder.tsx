@@ -114,83 +114,79 @@ export function AudioRecorder({ onRecordingComplete, format }: AudioRecorderProp
   };
 
   return (
-    <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center space-y-12 px-4">
+    <div className="w-full flex flex-col items-center justify-center space-y-10">
       {/* Timer */}
-      <div className="text-center space-y-4">
-        <div className="text-6xl md:text-7xl font-mono font-bold text-gray-800 tracking-wider">
+      <div className="text-center space-y-2">
+        <div className={`text-7xl font-bold tracking-tighter font-mono ${isRecording ? 'text-indigo-600' : 'text-slate-800'}`}>
           {formatDuration(duration)}
         </div>
-        {isRecording && !isPaused && (
-          <div className="flex items-center justify-center gap-2 text-red-600 animate-pulse">
-            <div className="w-3 h-3 rounded-full bg-red-600" />
-            <span className="text-sm font-medium">녹음 중</span>
-          </div>
-        )}
-        {isPaused && (
-          <div className="text-sm font-medium text-gray-600">일시정지됨</div>
-        )}
+        <div className="h-6 flex items-center justify-center">
+          {isRecording && !isPaused ? (
+            <div className="flex items-center gap-2 text-indigo-600 animate-pulse">
+              <div className="w-2 h-2 rounded-full bg-indigo-600" />
+              <span className="text-sm font-medium uppercase tracking-wider">Recording</span>
+            </div>
+          ) : isPaused ? (
+            <span className="text-sm font-medium text-amber-500 uppercase tracking-wider">Paused</span>
+          ) : (
+            <span className="text-sm font-medium text-slate-400 uppercase tracking-wider">Ready to Record</span>
+          )}
+        </div>
       </div>
 
       {error && (
-        <div className="w-full p-4 bg-red-50 border-2 border-red-200 rounded-2xl text-center">
+        <div className="w-full p-4 bg-red-50 border border-red-100 rounded-xl text-center">
           <p className="text-red-600 text-sm font-medium">{error}</p>
         </div>
       )}
 
-      {/* Main Record Button */}
-      {!isRecording ? (
-        <button
-          onClick={startRecording}
-          className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-red-600 hover:bg-red-700 active:bg-red-800 shadow-2xl flex items-center justify-center transition-all transform hover:scale-105 active:scale-95"
-          aria-label="녹음 시작"
-        >
-          <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white" />
-        </button>
-      ) : (
-        <div className="flex items-center gap-6">
-          {/* Pause/Resume Button */}
+      {/* Controls */}
+      <div className="flex items-center gap-6">
+        {!isRecording ? (
           <button
-            onClick={isPaused ? resumeRecording : pauseRecording}
-            className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white border-4 border-gray-300 hover:border-gray-400 shadow-xl flex items-center justify-center transition-all transform hover:scale-105 active:scale-95"
-            aria-label={isPaused ? "재개" : "일시정지"}
+            onClick={startRecording}
+            className="group relative flex items-center justify-center w-24 h-24 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-xl shadow-indigo-500/30 transition-all hover:scale-105 active:scale-95"
+            aria-label="Start Recording"
           >
-            {isPaused ? (
-              <svg
-                className="w-8 h-8 md:w-10 md:h-10 text-gray-700"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-              </svg>
-            ) : (
-              <svg
-                className="w-8 h-8 md:w-10 md:h-10 text-gray-700"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <rect x="5" y="4" width="3" height="12" rx="1" />
-                <rect x="12" y="4" width="3" height="12" rx="1" />
-              </svg>
-            )}
+            <div className="absolute inset-0 rounded-full border-2 border-white/20 group-hover:border-white/40 transition-colors" />
+            <div className="w-8 h-8 rounded-full bg-white" />
           </button>
+        ) : (
+          <>
+            {/* Pause/Resume Button */}
+            <button
+              onClick={isPaused ? resumeRecording : pauseRecording}
+              className="flex items-center justify-center w-16 h-16 rounded-full bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-sm transition-all hover:scale-105 active:scale-95"
+              aria-label={isPaused ? "Resume" : "Pause"}
+            >
+              {isPaused ? (
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                </svg>
+              )}
+            </button>
 
-          {/* Stop Button */}
-          <button
-            onClick={stopRecording}
-            className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gray-800 hover:bg-gray-900 shadow-xl flex items-center justify-center transition-all transform hover:scale-105 active:scale-95"
-            aria-label="중지"
-          >
-            <div className="w-8 h-8 md:w-10 md:h-10 rounded bg-white" />
-          </button>
-        </div>
-      )}
+            {/* Stop Button */}
+            <button
+              onClick={stopRecording}
+              className="group relative flex items-center justify-center w-24 h-24 rounded-full bg-white border-2 border-red-100 hover:border-red-200 shadow-xl shadow-red-500/10 transition-all hover:scale-105 active:scale-95"
+              aria-label="Stop Recording"
+            >
+              <div className="w-8 h-8 rounded-lg bg-red-500 group-hover:bg-red-600 transition-colors" />
+            </button>
+          </>
+        )}
+      </div>
 
-      {/* Info Text */}
+      {/* Helper Text */}
       {!isRecording && (
-        <p className="text-center text-sm text-gray-500 max-w-xs">
-          빨간 버튼을 눌러 녹음을 시작하세요
-          <br />
-          <span className="text-xs">(최대 120분)</span>
+        <p className="text-center text-sm text-slate-400">
+          Click the button to start recording<br />
+          <span className="text-xs opacity-75">(Max 120 mins)</span>
         </p>
       )}
     </div>

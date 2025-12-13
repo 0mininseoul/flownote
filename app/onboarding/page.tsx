@@ -62,26 +62,24 @@ function OnboardingContent() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-6">
-      <div className="max-w-3xl w-full space-y-8">
+    <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
+      <div className="max-w-2xl w-full space-y-8">
         {/* Progress Indicator */}
         <div className="flex items-center justify-center gap-4">
           {[1, 2].map((num) => (
             <div key={num} className="flex items-center">
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
-                  step >= num
-                    ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white"
-                    : "bg-gray-200 text-gray-500"
-                }`}
+                className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 ${step >= num
+                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
+                    : "bg-white text-slate-400 border border-slate-200"
+                  }`}
               >
                 {num}
               </div>
               {num < 2 && (
                 <div
-                  className={`w-16 h-1 ${
-                    step > num ? "bg-indigo-600" : "bg-gray-200"
-                  }`}
+                  className={`w-16 h-1 mx-2 rounded-full transition-all duration-300 ${step > num ? "bg-indigo-600" : "bg-slate-200"
+                    }`}
                 />
               )}
             </div>
@@ -89,131 +87,127 @@ function OnboardingContent() {
         </div>
 
         {/* Step Content */}
-        <div className="glass-card p-12 space-y-8">
+        <div className="card p-8 md:p-12 space-y-8 animate-slide-up">
           {step === 1 && (
-            <div className="space-y-6 text-center">
-              <h2 className="text-3xl font-bold text-gray-800">
-                환영합니다!
-              </h2>
-              <p className="text-gray-600">
-                Flownote를 사용하기 위해 간단한 설정을 진행합니다.
-              </p>
+            <div className="space-y-8 text-center">
+              <div className="space-y-4">
+                <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-6">
+                  👋
+                </div>
+                <h2 className="text-3xl font-bold text-slate-900">
+                  Welcome to Flownote
+                </h2>
+                <p className="text-lg text-slate-600 max-w-md mx-auto">
+                  Let's get you set up in just a few seconds. We'll connect your favorite tools to automate your workflow.
+                </p>
+              </div>
               <button
                 onClick={() => setStep(2)}
-                className="glass-button w-full max-w-sm mx-auto"
+                className="btn-primary w-full max-w-sm mx-auto flex items-center justify-center gap-2"
               >
-                다음
+                Get Started
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
               </button>
             </div>
           )}
 
           {step === 2 && (
-            <div className="space-y-6">
+            <div className="space-y-8">
               <div className="text-center space-y-2">
-                <h2 className="text-3xl font-bold text-gray-800">
-                  서비스 연결
+                <h2 className="text-2xl font-bold text-slate-900">
+                  Connect Services
                 </h2>
-                <p className="text-gray-600">
-                  Notion과 Slack을 연결하여 자동화를 시작하세요
+                <p className="text-slate-600">
+                  Link Notion and Slack to enable automation
                 </p>
               </div>
 
               <div className="space-y-4">
                 {/* Notion Connection */}
-                <div className="border border-gray-200 rounded-2xl p-6 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="text-2xl">📔</div>
+                <div className="border border-slate-200 rounded-xl p-6 hover:border-indigo-200 transition-all group">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                      📔
+                    </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-gray-800">Notion</h3>
-                      <p className="text-sm text-gray-600">
-                        정리된 문서가 자동으로 저장됩니다
+                      <h3 className="font-bold text-slate-900">Notion</h3>
+                      <p className="text-sm text-slate-500">
+                        Auto-save summaries to your database
                       </p>
                     </div>
                     {notionConnected && (
-                      <div className="flex items-center gap-2 text-green-600">
-                        <svg
-                          className="w-5 h-5"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                            clipRule="evenodd"
-                          />
+                      <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
-                        <span className="text-sm font-medium">연결됨</span>
+                        <span className="text-sm font-bold">Connected</span>
                       </div>
                     )}
                   </div>
                   {!notionConnected ? (
                     <button
                       onClick={handleNotionConnect}
-                      className="w-full py-2 px-4 border-2 border-indigo-600 text-indigo-600 rounded-lg font-medium hover:bg-indigo-50 transition-colors"
+                      className="w-full py-2.5 px-4 border-2 border-indigo-600 text-indigo-600 rounded-lg font-bold hover:bg-indigo-50 transition-colors"
                     >
-                      Notion 연결하기
+                      Connect Notion
                     </button>
                   ) : (
-                    <div className="w-full py-2 px-4 bg-green-50 text-green-700 rounded-lg font-medium text-center">
-                      연결 완료
+                    <div className="w-full py-2.5 px-4 bg-slate-50 text-slate-500 rounded-lg font-medium text-center border border-slate-200">
+                      Configuration available in Settings
                     </div>
                   )}
                 </div>
 
                 {/* Slack Connection */}
-                <div className="border border-gray-200 rounded-2xl p-6 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="text-2xl">💬</div>
+                <div className="border border-slate-200 rounded-xl p-6 hover:border-indigo-200 transition-all group">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                      💬
+                    </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-gray-800">Slack</h3>
-                      <p className="text-sm text-gray-600">
-                        완료 알림을 받습니다
+                      <h3 className="font-bold text-slate-900">Slack</h3>
+                      <p className="text-sm text-slate-500">
+                        Receive notifications when ready
                       </p>
                     </div>
                     {slackConnected && (
-                      <div className="flex items-center gap-2 text-green-600">
-                        <svg
-                          className="w-5 h-5"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                            clipRule="evenodd"
-                          />
+                      <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
-                        <span className="text-sm font-medium">연결됨</span>
+                        <span className="text-sm font-bold">Connected</span>
                       </div>
                     )}
                   </div>
                   {!slackConnected ? (
                     <button
                       onClick={handleSlackConnect}
-                      className="w-full py-2 px-4 border-2 border-indigo-600 text-indigo-600 rounded-lg font-medium hover:bg-indigo-50 transition-colors"
+                      className="w-full py-2.5 px-4 border-2 border-indigo-600 text-indigo-600 rounded-lg font-bold hover:bg-indigo-50 transition-colors"
                     >
-                      Slack 연결하기
+                      Connect Slack
                     </button>
                   ) : (
-                    <div className="w-full py-2 px-4 bg-green-50 text-green-700 rounded-lg font-medium text-center">
-                      연결 완료
+                    <div className="w-full py-2.5 px-4 bg-slate-50 text-slate-500 rounded-lg font-medium text-center border border-slate-200">
+                      Configuration available in Settings
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex gap-4 pt-4">
                 <button
                   onClick={() => setStep(1)}
-                  className="flex-1 py-3 px-4 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                  className="flex-1 py-3 px-4 text-slate-500 font-medium hover:text-slate-800 transition-colors"
                 >
-                  이전
+                  Back
                 </button>
                 <button
                   onClick={handleComplete}
-                  className="flex-1 glass-button"
+                  className="flex-1 btn-primary shadow-lg shadow-indigo-500/30"
                 >
-                  시작하기
+                  Complete Setup
                 </button>
               </div>
             </div>
