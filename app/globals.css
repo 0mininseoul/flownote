@@ -3,30 +3,153 @@
 @tailwind utilities;
 
 @layer base {
+  html, body {
+    @apply overflow-x-hidden;
+  }
+
   body {
-    @apply bg-white text-slate-900 antialiased font-sans;
+    @apply bg-gray-900 text-slate-900 antialiased font-sans;
     font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+  }
+}
+
+@layer components {
+  /* 모바일 앱 컨테이너 - 중앙 정렬된 430px 폰 레이아웃 */
+  .app-container {
+    @apply max-w-[430px] mx-auto min-h-screen bg-white relative;
+  }
+
+  /* 스크롤 가능한 메인 영역 (Bottom Tab 고려) */
+  .app-main {
+    @apply pb-20; /* Bottom Tab 높이만큼 패딩 */
+  }
+
+  /* Sticky Top Header */
+  .app-header {
+    @apply sticky top-0 z-50 bg-white border-b border-slate-100 px-4 h-14 flex items-center justify-between;
+  }
+
+  .app-header-title {
+    @apply text-lg font-bold text-slate-900;
+  }
+
+  /* Bottom Tab Navigation */
+  .bottom-tab {
+    @apply fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white border-t border-slate-100 z-50;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .bottom-tab-inner {
+    @apply flex justify-around items-center h-16;
+  }
+
+  .bottom-tab-item {
+    @apply flex flex-col items-center justify-center gap-1 min-h-[44px] min-w-[64px] text-slate-400 transition-colors;
+  }
+
+  .bottom-tab-item.active {
+    @apply text-slate-900;
+  }
+
+  .bottom-tab-item:active {
+    @apply text-slate-600 scale-95;
+  }
+
+  .bottom-tab-label {
+    @apply text-xs font-medium;
   }
 }
 
 @layer utilities {
   .card {
-    @apply bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300;
+    @apply bg-white border border-slate-200 rounded-2xl shadow-sm transition-shadow duration-300;
+  }
+
+  /* 터치 시 효과 (hover 대신 active 사용) */
+  .card-touchable {
+    @apply bg-white border border-slate-200 rounded-2xl shadow-sm transition-all duration-150;
+  }
+
+  .card-touchable:active {
+    @apply bg-slate-50 scale-[0.98];
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center px-6 py-3 rounded-full bg-gradient-primary text-white font-medium shadow-lg shadow-slate-900/30 hover:shadow-slate-900/40 hover:-translate-y-0.5 transition-all duration-300;
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-full bg-gradient-primary text-white font-medium shadow-lg shadow-slate-900/30 transition-all duration-150 min-h-[44px];
+  }
+
+  .btn-primary:active {
+    @apply scale-95 shadow-slate-900/40;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center px-6 py-3 rounded-full bg-white border border-slate-200 text-slate-700 font-medium hover:bg-slate-50 hover:border-slate-300 transition-all duration-300;
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-full bg-white border border-slate-200 text-slate-700 font-medium transition-all duration-150 min-h-[44px];
+  }
+
+  .btn-secondary:active {
+    @apply bg-slate-50 border-slate-300 scale-95;
   }
 
   .btn-nav {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-all duration-300;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-slate-900 text-white text-sm font-medium transition-all duration-150 min-h-[44px];
   }
 
+  .btn-nav:active {
+    @apply bg-slate-800 scale-95;
+  }
+
+  /* 터치 타겟 최소 사이즈 */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  /* 가로 스크롤 컨테이너 (칩 등) */
+  .scroll-x {
+    @apply overflow-x-auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scroll-x::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* 기존 container-custom은 유지하되 모바일에서는 사용 안 함 */
   .container-custom {
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* 모바일 패딩 통일 */
+  .px-mobile {
+    @apply px-4;
+  }
+
+  /* 애니메이션 */
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes bounce-arrow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.4s ease-out;
+  }
+
+  .animate-bounce-arrow {
+    animation: bounce-arrow 1s ease-in-out infinite;
   }
 }

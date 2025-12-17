@@ -18,6 +18,13 @@ export const translations = {
       dashboard: "대시보드",
     },
 
+    // Navigation
+    nav: {
+      record: "녹음",
+      history: "기록",
+      settings: "설정",
+    },
+
     // Landing Page
     landing: {
       nav: {
@@ -292,6 +299,13 @@ export const translations = {
       settings: "Settings",
       history: "History",
       dashboard: "Dashboard",
+    },
+
+    // Navigation
+    nav: {
+      record: "Record",
+      history: "History",
+      settings: "Settings",
     },
 
     // Landing Page

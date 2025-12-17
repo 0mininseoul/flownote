@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
+import { BottomTab } from "@/components/navigation/bottom-tab";
 
 interface NotionDatabase {
   id: string;
@@ -16,6 +17,12 @@ interface NotionPage {
   title: string;
   url: string;
   last_edited_time: string;
+}
+
+interface NotionSaveTarget {
+  type: "database" | "page";
+  id: string;
+  title: string;
 }
 
 interface CustomFormat {
@@ -50,6 +57,12 @@ export default function SettingsPage() {
   const [newDbTitle, setNewDbTitle] = useState("Flownote Recordings");
   const [modalLoading, setModalLoading] = useState(false);
 
+  // Notion 기본 저장 위치 드롭다운
+  const [showSaveTargetDropdown, setShowSaveTargetDropdown] = useState(false);
+  const [saveTarget, setSaveTarget] = useState<NotionSaveTarget | null>(null);
+  const [saveTargetSearch, setSaveTargetSearch] = useState("");
+  const [dropdownLoading, setDropdownLoading] = useState(false);
+
   // Custom format states
   const [customFormats, setCustomFormats] = useState<CustomFormat[]>([]);
   const [showFormatForm, setShowFormatForm] = useState(false);
@@ -64,8 +77,8 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("notion") === "connected" && params.get("selectDb") === "true") {
-      openDatabaseModal();
+    if (params.get("notion") === "connected") {
+      // Notion 연결 완료 시 바로 완료 처리 (DB 선택 모달 제거)
       window.history.replaceState({}, "", "/settings");
     }
   }, []);
@@ -83,12 +96,23 @@ export default function SettingsPage() {
       setUsage({
         used: usageData.used || 0,
         limit: usageData.limit || 350,
-        total: usageData.used || 0 // Ensuring compatibility
+        total: usageData.used || 0
       });
       setUserEmail(userData.email || "");
       setNotionConnected(!!userData.notion_access_token);
-      setSlackConnected(!!userData.slack_access_token); // Assuming this field exists
+      setSlackConnected(!!userData.slack_access_token);
       setNotionDatabaseId(userData.notion_database_id || null);
+
+      // 저장 위치 정보 로드
+      if (userData.notion_save_target) {
+        setSaveTarget(userData.notion_save_target);
+      } else if (userData.notion_database_id) {
+        // 기존 DB ID가 있으면 해당 정보 표시
+        const db = databases.find(d => d.id === userData.notion_database_id);
+        if (db) {
+          setSaveTarget({ type: "database", id: db.id, title: db.title });
+        }
+      }
     } catch (error) {
       console.error("Failed to fetch user data:", error);
     } finally {
@@ -179,11 +203,69 @@ export default function SettingsPage() {
 
   const handleConnect = (service: 'notion' | 'slack') => {
     if (service === 'notion') {
-      window.location.href = "/api/auth/notion?returnTo=/settings&selectDb=true";
+      // 연동 후 바로 settings로 돌아옴 (selectDb 파라미터 제거)
+      window.location.href = "/api/auth/notion?returnTo=/settings";
     } else if (service === 'slack') {
       window.location.href = "/api/auth/slack?returnTo=/settings";
     }
   };
+
+  // 기본 저장 위치 드롭다운 열기
+  const openSaveTargetDropdown = async () => {
+    setShowSaveTargetDropdown(true);
+    setDropdownLoading(true);
+    try {
+      const [dbResponse, pageResponse] = await Promise.all([
+        fetch("/api/notion/databases"),
+        fetch("/api/notion/pages"),
+      ]);
+
+      if (dbResponse.ok) {
+        const dbData = await dbResponse.json();
+        setDatabases(dbData.databases || []);
+      }
+
+      if (pageResponse.ok) {
+        const pageData = await pageResponse.json();
+        setPages(pageData.pages || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch Notion data:", error);
+    } finally {
+      setDropdownLoading(false);
+    }
+  };
+
+  // 저장 위치 선택
+  const selectSaveTarget = async (target: NotionSaveTarget) => {
+    try {
+      const response = await fetch("/api/user/notion-database", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          databaseId: target.type === "database" ? target.id : null,
+          pageId: target.type === "page" ? target.id : null,
+          saveTargetType: target.type,
+        }),
+      });
+
+      if (response.ok) {
+        setSaveTarget(target);
+        setShowSaveTargetDropdown(false);
+        setSaveTargetSearch("");
+      }
+    } catch (error) {
+      console.error("Failed to set save target:", error);
+    }
+  };
+
+  // 필터링된 결과
+  const filteredDatabases = databases.filter(db =>
+    db.title.toLowerCase().includes(saveTargetSearch.toLowerCase())
+  );
+  const filteredPages = pages.filter(page =>
+    page.title.toLowerCase().includes(saveTargetSearch.toLowerCase())
+  );
 
   const openDatabaseModal = async () => {
     setShowDatabaseModal(true);
@@ -205,7 +287,7 @@ export default function SettingsPage() {
       }
     } catch (error) {
       console.error("Failed to fetch Notion data:", error);
-      alert("Notion 데이터를 불러오는데 실패했습니다.");
+      alert(t.settings.notionModal.fetchFailed);
     } finally {
       setModalLoading(false);
     }
@@ -222,19 +304,19 @@ export default function SettingsPage() {
       if (response.ok) {
         setNotionDatabaseId(databaseId);
         setShowDatabaseModal(false);
-        alert("Notion 데이터베이스가 설정되었습니다.");
+        alert(t.settings.notionModal.dbSet);
       } else {
         throw new Error("Failed to update database");
       }
     } catch (error) {
       console.error("Failed to set database:", error);
-      alert("데이터베이스 설정에 실패했습니다.");
+      alert(t.settings.notionModal.dbSetFailed);
     }
   };
 
   const createDatabase = async () => {
     if (!selectedPageId) {
-      alert("페이지를 선택해주세요.");
+      alert(t.settings.notionModal.selectPageFirst);
       return;
     }
 
@@ -257,7 +339,7 @@ export default function SettingsPage() {
       }
     } catch (error) {
       console.error("Failed to create database:", error);
-      alert("데이터베이스 생성에 실패했습니다.");
+      alert(t.settings.notionModal.createFailed);
     } finally {
       setModalLoading(false);
     }
@@ -299,65 +381,35 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Navbar */}
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div className="container-custom h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push("/dashboard")}>
-            <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center text-white font-bold">
-              F
-            </div>
-            <span className="text-xl font-bold text-slate-900">Flownote</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-all"
-              title="Dashboard"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-            </button>
-            <button
-              onClick={() => router.push("/history")}
-              className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-all"
-              title="History"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </nav>
+    <div className="app-container">
+      {/* Header */}
+      <header className="app-header">
+        <h1 className="app-header-title">{t.settings.title}</h1>
+      </header>
 
       {/* Main Content */}
-      <main className="container-custom py-8 flex-1 max-w-4xl">
-        <h1 className="text-2xl font-bold text-slate-900 mb-8">{t.settings.title}</h1>
-
-        <div className="space-y-6">
+      <main className="app-main px-4 py-4">
+        <div className="space-y-4">
           {/* Account Info */}
-          <div className="card p-6">
-            <h2 className="text-lg font-bold text-slate-900 mb-4">
+          <div className="card p-4">
+            <h2 className="text-base font-bold text-slate-900 mb-3">
               {t.settings.account.title}
             </h2>
-            <div className="space-y-6">
+            <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-500 mb-1">
+                <label className="block text-xs font-medium text-slate-500 mb-1">
                   {t.settings.account.email}
                 </label>
-                <div className="text-slate-900 font-medium">
+                <div className="text-sm text-slate-900 font-medium">
                   {loading ? t.common.loading : userEmail || t.settings.account.noEmail}
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-500 mb-2">
+                <label className="block text-xs font-medium text-slate-500 mb-2">
                   {t.settings.account.usage}
                 </label>
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center justify-between text-xs">
                     <span className="text-slate-700 font-medium">
                       {usage.used} mins / {usage.limit} mins
                     </span>
@@ -365,114 +417,206 @@ export default function SettingsPage() {
                       {Math.round((usage.used / usage.limit) * 100)}%
                     </span>
                   </div>
-                  <div className="w-full h-8 bg-slate-100 rounded-lg overflow-hidden flex items-center relative">
+                  <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-slate-900 transition-all duration-500 relative group"
-                      style={{ width: `${(usage.total / usage.limit) * 100}%` }}
-                    >
-                      <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                    <div className="absolute right-4 text-xs font-bold text-slate-500 mix-blend-multiply">
-                      {Math.round((usage.total / usage.limit) * 100)}% {t.settings.account.used}
-                    </div>
+                      className="h-full bg-slate-900 transition-all duration-500"
+                      style={{ width: `${Math.min((usage.total / usage.limit) * 100, 100)}%` }}
+                    />
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Connected Integrations */}
-          <div className="card p-6">
-            <h2 className="text-lg font-bold text-slate-900 mb-4">
+          {/* Integrations */}
+          <div className="card p-4">
+            <h2 className="text-base font-bold text-slate-900 mb-3">
               {t.settings.integrations.title}
             </h2>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {/* Notion */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border border-slate-200 rounded-xl hover:border-blue-200 transition-colors">
-                <div className="flex items-center gap-4 mb-4 sm:mb-0">
-                  <div className="w-10 h-10 bg-slate-50 rounded-lg flex items-center justify-center text-2xl">
+              <div className="p-3 border border-slate-200 rounded-xl">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 bg-slate-50 rounded-lg flex items-center justify-center text-xl">
                     📔
                   </div>
-                  <div>
-                    <h3 className="font-bold text-slate-900">{t.settings.integrations.notion.title}</h3>
-                    <p className="text-sm text-slate-500">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-slate-900 text-sm">{t.settings.integrations.notion.title}</h3>
+                    <p className="text-xs text-slate-500 truncate">
                       {notionConnected
-                        ? notionDatabaseId
-                          ? t.settings.integrations.notion.connected
+                        ? saveTarget
+                          ? `저장 위치: ${saveTarget.title}`
                           : t.settings.integrations.notion.selectDb
                         : t.settings.integrations.notion.notConnected}
                     </p>
                   </div>
                 </div>
-                <button
-                  onClick={() => {
-                    if (notionConnected) {
-                      openDatabaseModal();
-                    } else {
-                      handleConnect('notion');
-                    }
-                  }}
-                  className={`px-4 py-2 rounded-lg font-bold transition-all w-full sm:w-auto ${notionConnected
-                    ? "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
-                    : "bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/10 hover:shadow-slate-900/20 active:scale-95"
-                    }`}
-                >
-                  {notionConnected ? t.settings.integrations.notion.configure : t.settings.integrations.notion.connect}
-                </button>
+
+                {notionConnected ? (
+                  <div className="space-y-2">
+                    {/* 기본 저장 위치 드롭다운 */}
+                    <div className="relative">
+                      <button
+                        onClick={openSaveTargetDropdown}
+                        className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-left text-sm font-medium text-slate-700 flex items-center justify-between min-h-[44px]"
+                      >
+                        <span className="truncate">
+                          {saveTarget ? `📁 ${saveTarget.title}` : "기본 저장 위치 선택"}
+                        </span>
+                        <svg className="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+
+                      {/* 드롭다운 메뉴 */}
+                      {showSaveTargetDropdown && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 max-h-64 overflow-hidden">
+                          {/* 검색 입력 */}
+                          <div className="p-2 border-b border-slate-100">
+                            <input
+                              type="text"
+                              value={saveTargetSearch}
+                              onChange={(e) => setSaveTargetSearch(e.target.value)}
+                              placeholder="검색..."
+                              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
+                              autoFocus
+                            />
+                          </div>
+
+                          <div className="overflow-y-auto max-h-48">
+                            {dropdownLoading ? (
+                              <div className="flex justify-center py-4">
+                                <div className="w-6 h-6 border-2 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
+                              </div>
+                            ) : (
+                              <>
+                                {/* 데이터베이스 섹션 */}
+                                {filteredDatabases.length > 0 && (
+                                  <div>
+                                    <div className="px-3 py-1.5 text-xs font-medium text-slate-400 bg-slate-50">
+                                      데이터베이스 (새 아이템으로 추가)
+                                    </div>
+                                    {filteredDatabases.map((db) => (
+                                      <button
+                                        key={db.id}
+                                        onClick={() => selectSaveTarget({ type: "database", id: db.id, title: db.title })}
+                                        className="w-full px-3 py-2.5 text-left text-sm hover:bg-slate-50 flex items-center gap-2 min-h-[44px]"
+                                      >
+                                        <span>📊</span>
+                                        <span className="truncate">{db.title}</span>
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {/* 페이지 섹션 */}
+                                {filteredPages.length > 0 && (
+                                  <div>
+                                    <div className="px-3 py-1.5 text-xs font-medium text-slate-400 bg-slate-50">
+                                      페이지 (새 페이지로 추가)
+                                    </div>
+                                    {filteredPages.map((page) => (
+                                      <button
+                                        key={page.id}
+                                        onClick={() => selectSaveTarget({ type: "page", id: page.id, title: page.title })}
+                                        className="w-full px-3 py-2.5 text-left text-sm hover:bg-slate-50 flex items-center gap-2 min-h-[44px]"
+                                      >
+                                        <span>📄</span>
+                                        <span className="truncate">{page.title}</span>
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {filteredDatabases.length === 0 && filteredPages.length === 0 && (
+                                  <div className="px-3 py-4 text-center text-sm text-slate-500">
+                                    검색 결과가 없습니다
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
+
+                          {/* 닫기 버튼 */}
+                          <div className="p-2 border-t border-slate-100">
+                            <button
+                              onClick={() => {
+                                setShowSaveTargetDropdown(false);
+                                setSaveTargetSearch("");
+                              }}
+                              className="w-full py-2 text-sm text-slate-500 font-medium"
+                            >
+                              닫기
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={openDatabaseModal}
+                      className="w-full px-3 py-2.5 text-sm text-slate-600 font-medium hover:bg-slate-50 rounded-lg min-h-[44px]"
+                    >
+                      + 새 데이터베이스 만들기
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => handleConnect('notion')}
+                    className="w-full px-4 py-2.5 bg-slate-900 text-white rounded-lg font-bold text-sm min-h-[44px]"
+                  >
+                    {t.settings.integrations.notion.connect}
+                  </button>
+                )}
               </div>
 
               {/* Slack */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border border-slate-200 rounded-xl hover:border-blue-200 transition-colors">
-                <div className="flex items-center gap-4 mb-4 sm:mb-0">
-                  <div className="w-10 h-10 bg-slate-50 rounded-lg flex items-center justify-center text-2xl">
+              <div className="p-3 border border-slate-200 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-slate-50 rounded-lg flex items-center justify-center text-xl">
                     💬
                   </div>
-                  <div>
-                    <h3 className="font-bold text-slate-900">{t.settings.integrations.slack.title}</h3>
-                    <p className="text-sm text-slate-500">{t.settings.integrations.slack.description}</p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-slate-900 text-sm">{t.settings.integrations.slack.title}</h3>
+                    <p className="text-xs text-slate-500">{t.settings.integrations.slack.description}</p>
                   </div>
+                  <button
+                    onClick={() => handleConnect('slack')}
+                    className="px-3 py-2 bg-slate-100 text-slate-700 rounded-lg text-xs font-medium min-h-[44px]"
+                  >
+                    {slackConnected ? t.settings.integrations.slack.reconnect : "연결"}
+                  </button>
                 </div>
-                <button
-                  onClick={() => handleConnect('slack')}
-                  className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors w-full sm:w-auto"
-                >
-                  {t.settings.integrations.slack.reconnect}
-                </button>
               </div>
             </div>
           </div>
 
           {/* Custom Formats */}
-          <div className="card p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-lg font-bold text-slate-900">
-                  {t.settings.formats.title}
-                </h2>
-                <p className="text-sm text-slate-500">
-                  {t.settings.formats.description}
-                </p>
-              </div>
+          <div className="card p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-bold text-slate-900">
+                {t.settings.formats.title}
+              </h2>
               {customFormats.length < 3 && !showFormatForm && (
                 <button
                   onClick={() => setShowFormatForm(true)}
-                  className="px-4 py-2 bg-slate-900 text-white rounded-lg font-bold hover:bg-slate-800 transition-colors text-sm"
+                  className="px-3 py-1.5 bg-slate-900 text-white rounded-lg font-bold text-xs min-h-[36px]"
                 >
                   {t.settings.formats.addNew}
                 </button>
               )}
             </div>
 
-            <div className="space-y-4">
-              {/* Default Format Info */}
-              <div className="p-4 border border-slate-200 rounded-xl bg-slate-50">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-xl border border-slate-200">
+            <div className="space-y-3">
+              {/* Default Format */}
+              <div className="p-3 border border-slate-200 rounded-xl bg-slate-50">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-lg border border-slate-200">
                     📝
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-slate-900">{t.settings.formats.default}</h3>
-                    <p className="text-sm text-slate-500">{t.settings.formats.defaultDesc}</p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-slate-900 text-sm">{t.settings.formats.default}</h3>
+                    <p className="text-xs text-slate-500 truncate">{t.settings.formats.defaultDesc}</p>
                   </div>
                 </div>
               </div>
@@ -481,42 +625,41 @@ export default function SettingsPage() {
               {customFormats.map((format) => (
                 <div
                   key={format.id}
-                  className={`p-4 border rounded-xl transition-all ${
+                  className={`p-3 border rounded-xl ${
                     format.is_default
                       ? "border-slate-900 bg-slate-50 ring-1 ring-slate-900"
-                      : "border-slate-200 hover:border-slate-300"
+                      : "border-slate-200"
                   }`}
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-xl">
+                  <div className="flex items-start gap-2">
+                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-lg">
                       ✨
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-slate-900">{format.name}</h3>
+                        <h3 className="font-bold text-slate-900 text-sm">{format.name}</h3>
                         {format.is_default && (
-                          <span className="px-2 py-0.5 bg-slate-900 text-white text-xs font-bold rounded-full">
+                          <span className="px-1.5 py-0.5 bg-slate-900 text-white text-[10px] font-bold rounded-full">
                             {t.settings.formats.isDefault}
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-slate-500 mt-1 line-clamp-2">{format.prompt}</p>
+                      <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{format.prompt}</p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       {!format.is_default && (
                         <button
                           onClick={() => handleSetDefaultFormat(format.id)}
-                          className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+                          className="px-2 py-1 text-[10px] font-medium text-slate-500 hover:bg-slate-100 rounded-lg min-h-[32px]"
                         >
-                          {t.settings.formats.setAsDefault}
+                          기본값
                         </button>
                       )}
                       <button
                         onClick={() => handleDeleteFormat(format.id)}
-                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete"
+                        className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg min-h-[32px] min-w-[32px]"
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                       </button>
@@ -527,46 +670,46 @@ export default function SettingsPage() {
 
               {/* New Format Form */}
               {showFormatForm && (
-                <div className="p-4 border border-slate-200 rounded-xl bg-white space-y-4">
+                <div className="p-3 border border-slate-200 rounded-xl bg-white space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-xs font-medium text-slate-700 mb-1">
                       {t.settings.formats.formatName}
                     </label>
                     <input
                       type="text"
                       value={newFormatName}
                       onChange={(e) => setNewFormatName(e.target.value)}
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none"
                       placeholder={t.settings.formats.formatName}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-xs font-medium text-slate-700 mb-1">
                       {t.settings.formats.formatPrompt}
                     </label>
                     <textarea
                       value={newFormatPrompt}
                       onChange={(e) => setNewFormatPrompt(e.target.value)}
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none resize-none"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none resize-none"
                       rows={3}
                       placeholder={t.settings.formats.promptPlaceholder}
                     />
                   </div>
-                  <div className="flex gap-3">
+                  <div className="flex gap-2">
                     <button
                       onClick={() => {
                         setShowFormatForm(false);
                         setNewFormatName("");
                         setNewFormatPrompt("");
                       }}
-                      className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-colors"
+                      className="flex-1 px-3 py-2 border border-slate-200 text-slate-700 rounded-lg text-sm font-medium min-h-[44px]"
                     >
                       {t.common.cancel}
                     </button>
                     <button
                       onClick={handleCreateFormat}
                       disabled={!newFormatName || !newFormatPrompt || formatLoading}
-                      className="flex-1 px-4 py-2 bg-slate-900 text-white rounded-lg font-bold hover:bg-slate-800 transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed"
+                      className="flex-1 px-3 py-2 bg-slate-900 text-white rounded-lg text-sm font-bold disabled:bg-slate-300 min-h-[44px]"
                     >
                       {formatLoading ? t.common.loading : t.common.save}
                     </button>
@@ -574,9 +717,8 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              {/* Max formats message */}
               {customFormats.length >= 3 && (
-                <p className="text-sm text-slate-500 text-center py-2">
+                <p className="text-xs text-slate-500 text-center py-1">
                   {t.settings.formats.maxFormats}
                 </p>
               )}
@@ -584,17 +726,15 @@ export default function SettingsPage() {
           </div>
 
           {/* Data Management */}
-          <div className="card p-6">
-            <h2 className="text-lg font-bold text-slate-900 mb-4">
+          <div className="card p-4">
+            <h2 className="text-base font-bold text-slate-900 mb-3">
               {t.settings.data.title}
             </h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl">
-                <div>
-                  <h3 className="font-bold text-slate-900">{t.settings.data.autoDelete}</h3>
-                  <p className="text-sm text-slate-500">
-                    {t.settings.data.autoDeleteDesc}
-                  </p>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 border border-slate-200 rounded-xl">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-slate-900 text-sm">{t.settings.data.autoDelete}</h3>
+                  <p className="text-xs text-slate-500">{t.settings.data.autoDeleteDesc}</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -603,18 +743,16 @@ export default function SettingsPage() {
                     checked={autoSave}
                     onChange={(e) => setAutoSave(e.target.checked)}
                   />
-                  <div className="w-14 h-7 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-slate-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-slate-900 border-2 border-transparent"></div>
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-900"></div>
                 </label>
               </div>
 
-              <div className="p-4 bg-red-50 border border-red-100 rounded-xl">
-                <h3 className="font-bold text-red-700 mb-1">{t.settings.data.danger}</h3>
-                <p className="text-sm text-red-600 mb-4">
-                  {t.settings.data.dangerDesc}
-                </p>
+              <div className="p-3 bg-red-50 border border-red-100 rounded-xl">
+                <h3 className="font-bold text-red-700 text-sm mb-1">{t.settings.data.danger}</h3>
+                <p className="text-xs text-red-600 mb-3">{t.settings.data.dangerDesc}</p>
                 <button
                   onClick={handleDeleteAllData}
-                  className="px-4 py-2 bg-white border border-red-200 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors"
+                  className="px-3 py-2 bg-white border border-red-200 text-red-600 rounded-lg text-xs font-medium min-h-[44px]"
                 >
                   {t.settings.data.deleteAll}
                 </button>
@@ -623,179 +761,110 @@ export default function SettingsPage() {
           </div>
 
           {/* Language Settings */}
-          <div className="card p-6">
-            <h2 className="text-lg font-bold text-slate-900 mb-4">
+          <div className="card p-4">
+            <h2 className="text-base font-bold text-slate-900 mb-3">
               {t.settings.language.title}
             </h2>
-            <p className="text-sm text-slate-500 mb-4">
-              {t.settings.language.description}
-            </p>
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <button
                 onClick={() => setLocale("ko")}
-                className={`flex-1 px-4 py-3 rounded-xl font-medium transition-all ${
+                className={`flex-1 px-3 py-3 rounded-xl font-medium text-sm transition-all min-h-[44px] ${
                   locale === "ko"
-                    ? "bg-slate-900 text-white shadow-lg shadow-slate-900/10"
-                    : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+                    ? "bg-slate-900 text-white"
+                    : "bg-slate-100 text-slate-700"
                 }`}
               >
-                🇰🇷 {t.settings.language.korean}
+                🇰🇷 한국어
               </button>
               <button
                 onClick={() => setLocale("en")}
-                className={`flex-1 px-4 py-3 rounded-xl font-medium transition-all ${
+                className={`flex-1 px-3 py-3 rounded-xl font-medium text-sm transition-all min-h-[44px] ${
                   locale === "en"
-                    ? "bg-slate-900 text-white shadow-lg shadow-slate-900/10"
-                    : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+                    ? "bg-slate-900 text-white"
+                    : "bg-slate-100 text-slate-700"
                 }`}
               >
-                🇺🇸 {t.settings.language.english}
+                🇺🇸 English
               </button>
             </div>
           </div>
 
           {/* Sign Out */}
-          <div className="card p-6">
-            <button
-              onClick={handleSignOut}
-              className="w-full py-3 px-4 border border-slate-200 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-colors"
-            >
-              {t.settings.signOut}
-            </button>
-          </div>
+          <button
+            onClick={handleSignOut}
+            className="w-full py-3 px-4 border border-slate-200 text-slate-700 rounded-xl font-medium text-sm min-h-[44px]"
+          >
+            {t.settings.signOut}
+          </button>
         </div>
       </main>
 
-      {/* Database Selection Modal */}
+      {/* Bottom Tab Navigation */}
+      <BottomTab />
+
+      {/* Database Creation Modal */}
       {showDatabaseModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden shadow-2xl animate-slide-up">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-end justify-center z-50 animate-fade-in">
+          <div className="bg-white rounded-t-2xl w-full max-w-[430px] max-h-[80vh] overflow-hidden shadow-2xl animate-slide-up">
             {/* Modal Header */}
-            <div className="p-6 border-b border-slate-100">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-slate-900">
-                  {t.settings.notionModal.title}
+            <div className="p-4 border-b border-slate-100">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-slate-900">
+                  새 데이터베이스 만들기
                 </h2>
                 <button
                   onClick={() => setShowDatabaseModal(false)}
-                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 hover:text-slate-600"
+                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 min-h-[44px] min-w-[44px]"
                 >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                </button>
-              </div>
-
-              {/* Tabs */}
-              <div className="flex gap-1 p-1 bg-slate-100 rounded-xl">
-                <button
-                  onClick={() => setModalTab("select")}
-                  className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${modalTab === "select"
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
-                    }`}
-                >
-                  Select Existing
-                </button>
-                <button
-                  onClick={() => setModalTab("create")}
-                  className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${modalTab === "create"
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
-                    }`}
-                >
-                  Create New
                 </button>
               </div>
             </div>
 
             {/* Modal Content */}
-            <div className="p-6 overflow-y-auto max-h-[calc(80vh-200px)]">
+            <div className="p-4 overflow-y-auto max-h-[calc(80vh-80px)]">
               {modalLoading ? (
-                <div className="flex justify-center py-12">
-                  <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
-                </div>
-              ) : modalTab === "select" ? (
-                <div className="space-y-3">
-                  {databases.length === 0 ? (
-                    <div className="text-center py-12">
-                      <p className="text-slate-500 mb-4">
-                        No databases found.
-                      </p>
-                      <button
-                        onClick={() => setModalTab("create")}
-                        className="text-blue-600 hover:text-blue-700 font-bold"
-                      >
-                        Create a new database →
-                      </button>
-                    </div>
-                  ) : (
-                    databases.map((db) => (
-                      <button
-                        key={db.id}
-                        onClick={() => selectDatabase(db.id)}
-                        className="w-full p-4 border border-slate-200 rounded-xl hover:border-slate-900 hover:bg-slate-50 transition-all text-left group"
-                      >
-                        <div className="font-bold text-slate-900 mb-1 group-hover:text-slate-700">
-                          {db.title}
-                        </div>
-                        <div className="text-xs text-slate-500">
-                          Last edited: {new Date(db.last_edited_time).toLocaleDateString("ko-KR")}
-                        </div>
-                      </button>
-                    ))
-                  )}
+                <div className="flex justify-center py-8">
+                  <div className="w-10 h-10 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
                 </div>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Database Name
+                      데이터베이스 이름
                     </label>
                     <input
                       type="text"
                       value={newDbTitle}
                       onChange={(e) => setNewDbTitle(e.target.value)}
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition-all"
+                      className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none"
                       placeholder="Flownote Recordings"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Select Parent Page
+                      상위 페이지 선택
                     </label>
                     {pages.length === 0 ? (
-                      <p className="text-slate-500 text-sm bg-slate-50 p-4 rounded-lg">
-                        No pages found. Please create a page in Notion first.
+                      <p className="text-slate-500 text-sm bg-slate-50 p-3 rounded-lg">
+                        페이지가 없습니다. Notion에서 먼저 페이지를 만들어주세요.
                       </p>
                     ) : (
-                      <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
                         {pages.map((page) => (
                           <button
                             key={page.id}
                             onClick={() => setSelectedPageId(page.id)}
-                            className={`w-full p-3 border rounded-lg transition-all text-left ${selectedPageId === page.id
-                              ? "border-slate-900 bg-slate-50 ring-1 ring-slate-900"
-                              : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                              }`}
+                            className={`w-full p-3 border rounded-lg transition-all text-left min-h-[44px] ${
+                              selectedPageId === page.id
+                                ? "border-slate-900 bg-slate-50 ring-1 ring-slate-900"
+                                : "border-slate-200 hover:border-slate-300"
+                            }`}
                           >
-                            <div className="font-medium text-slate-900">
-                              {page.title}
-                            </div>
-                            <div className="text-xs text-slate-500 mt-1">
-                              Last edited: {new Date(page.last_edited_time).toLocaleDateString("ko-KR")}
-                            </div>
+                            <div className="font-medium text-slate-900 text-sm">{page.title}</div>
                           </button>
                         ))}
                       </div>
@@ -805,9 +874,9 @@ export default function SettingsPage() {
                   <button
                     onClick={createDatabase}
                     disabled={!selectedPageId || modalLoading}
-                    className="w-full px-4 py-3 bg-slate-900 text-white rounded-lg font-bold hover:bg-slate-800 transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed shadow-lg shadow-slate-900/10"
+                    className="w-full px-4 py-3 bg-slate-900 text-white rounded-lg font-bold text-sm disabled:bg-slate-300 min-h-[44px]"
                   >
-                    Create Database
+                    데이터베이스 만들기
                   </button>
                 </div>
               )}
