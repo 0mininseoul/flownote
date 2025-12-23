@@ -33,12 +33,12 @@ export const translations = {
       },
       hero: {
         badge: "Record once, document automatically",
-        title: "음성을",
-        titleHighlight: "완벽한 문서로",
-        description: "회의, 강의, 인터뷰를 녹음하세요. AI가 자동으로 전사하고, 요약하고, Notion에 정리해드립니다.",
+        title: "녹음 한 번으로",
+        titleHighlight: "완성되는 자동 문서",
+        description: "회의, 강의, 인터뷰, 뭐든 녹음하세요.\nAI가 자동으로 문서를 완성해드립니다.",
       },
       features: {
-        title: "아이디어를 담는 모든 것",
+        title: "가장 가성비 있는 AI 노트 테이커",
         description: "더 이상 노트 걱정 마세요. 대화에 집중하고, 나머지는 Flownote에게 맡기세요.",
         recording: {
           title: "고품질 녹음",
@@ -54,7 +54,7 @@ export const translations = {
         },
       },
       howItWorks: {
-        title: "어떻게 작동하나요",
+        title: "원클릭 녹음으로 끝내세요",
         description: "녹음에서 정리된 문서까지, 몇 시간이 아닌 몇 분이면 됩니다.",
         steps: {
           record: {

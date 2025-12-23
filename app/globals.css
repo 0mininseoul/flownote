@@ -26,11 +26,16 @@
 
   /* 스크롤 가능한 메인 영역 (Bottom Tab 고려) */
   .app-main {
-    @apply flex-1 overflow-y-auto;
+    @apply overflow-y-auto;
+    /* flex-1 + height: 0으로 iOS Safari 스크롤 버그 수정 */
+    flex: 1 1 0;
+    min-height: 0;
     /* Bottom Tab 높이 + safe area 고려 */
     padding-bottom: calc(80px + env(safe-area-inset-bottom));
     /* iOS 스크롤 바운스 허용 */
     -webkit-overflow-scrolling: touch;
+    /* 스크롤 가능하도록 명시 */
+    overscroll-behavior: contain;
   }
 
   /* Sticky Top Header */

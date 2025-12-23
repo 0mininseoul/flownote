@@ -71,16 +71,20 @@ export default function SettingsPage() {
   const [formatLoading, setFormatLoading] = useState(false);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const isNotionJustConnected = params.get("notion") === "connected";
+
+    if (isNotionJustConnected) {
+      // Notion 연결 완료 후 URL 파라미터 제거
+      window.history.replaceState({}, "", "/settings");
+      // 약간의 지연 후 데이터 다시 가져오기 (DB 저장 완료 대기)
+      setTimeout(() => {
+        fetchUserData();
+      }, 500);
+    }
+
     fetchUserData();
     fetchCustomFormats();
-  }, []);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("notion") === "connected") {
-      // Notion 연결 완료 시 바로 완료 처리 (DB 선택 모달 제거)
-      window.history.replaceState({}, "", "/settings");
-    }
   }, []);
 
   const fetchUserData = async () => {
