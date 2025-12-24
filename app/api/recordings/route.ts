@@ -184,6 +184,13 @@ async function processRecording(
     let transcript: string;
     try {
       console.log(`[${recordingId}] Step 1: Transcribing audio...`);
+
+      // Update processing_step to 'transcription'
+      await supabase
+        .from("recordings")
+        .update({ processing_step: "transcription" })
+        .eq("id", recordingId);
+
       transcript = await transcribeAudio(audioFile);
 
       if (!transcript || transcript.trim().length === 0) {
@@ -216,6 +223,13 @@ async function processRecording(
     let formattedContent: string;
     try {
       console.log(`[${recordingId}] Step 2: Formatting document...`);
+
+      // Update processing_step to 'formatting'
+      await supabase
+        .from("recordings")
+        .update({ processing_step: "formatting" })
+        .eq("id", recordingId);
+
       formattedContent = await formatDocument(transcript, format);
 
       if (!formattedContent || formattedContent.trim().length === 0) {
@@ -255,6 +269,12 @@ async function processRecording(
     if (userData.notion_access_token && userData.notion_database_id) {
       try {
         console.log(`[${recordingId}] Step 3: Creating Notion page...`);
+
+        // Update processing_step to 'saving'
+        await supabase
+          .from("recordings")
+          .update({ processing_step: "saving" })
+          .eq("id", recordingId);
         notionUrl = await createNotionPage(
           userData.notion_access_token,
           userData.notion_database_id,
@@ -327,6 +347,7 @@ async function processRecording(
       .from("recordings")
       .update({
         status: "completed",
+        processing_step: null,
         // Clear error fields if processing completed successfully
         error_step: null,
         error_message: null

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AudioRecorder } from "@/components/recorder/audio-recorder";
 import { getFileExtension } from "@/hooks/useAudioRecorder";
@@ -11,6 +11,24 @@ export default function DashboardPage() {
   const router = useRouter();
   const { t } = useI18n();
   const [isUploading, setIsUploading] = useState(false);
+  const [notionConnected, setNotionConnected] = useState(true);
+  const [slackConnected, setSlackConnected] = useState(true);
+
+  useEffect(() => {
+    const fetchConnectionStatus = async () => {
+      try {
+        const response = await fetch("/api/user/data");
+        if (response.ok) {
+          const data = await response.json();
+          setNotionConnected(data.notionConnected);
+          setSlackConnected(data.slackConnected);
+        }
+      } catch (error) {
+        console.error("Failed to fetch connection status:", error);
+      }
+    };
+    fetchConnectionStatus();
+  }, []);
 
   const handleRecordingComplete = async (blob: Blob, duration: number) => {
     setIsUploading(true);
@@ -88,12 +106,39 @@ export default function DashboardPage() {
             <div className="card p-6 shadow-lg">
               <div className="text-center mb-6">
                 <h1 className="text-xl font-bold text-slate-900">{t.dashboard.newRecording}</h1>
+
+                {/* Integration Warnings */}
+                {(!notionConnected || !slackConnected) && (
+                  <div className="mt-3 space-y-2">
+                    {!notionConnected && (
+                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                        <div className="flex items-start gap-2 text-xs text-amber-800">
+                          <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                          </svg>
+                          <span>{t.dashboard.notionNotConnected}</span>
+                        </div>
+                      </div>
+                    )}
+                    {!slackConnected && (
+                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                        <div className="flex items-start gap-2 text-xs text-amber-800">
+                          <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                          </svg>
+                          <span>{t.dashboard.slackNotConnected}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-xl">
                   <div className="flex items-start gap-2 text-xs text-blue-700">
                     <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span>오디오 파일은 저장되지 않습니다. 음성은 텍스트로 변환된 후 즉시 폐기됩니다.</span>
+                    <span>음성 녹음해도 어차피 안 들으시죠? 음성은 텍스트로 변환된 후 즉시 폐기해 드립니다.</span>
                   </div>
                 </div>
               </div>

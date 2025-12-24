@@ -20,6 +20,7 @@ export interface Recording {
   duration_seconds: number;
   format: RecordingFormat;
   status: RecordingStatus;
+  processing_step?: ProcessingStep;
   transcript?: string;
   formatted_content?: string;
   notion_page_url?: string;
@@ -30,6 +31,7 @@ export interface Recording {
 
 export type RecordingFormat = "meeting" | "interview" | "lecture" | "custom";
 export type RecordingStatus = "processing" | "completed" | "failed";
+export type ProcessingStep = "transcription" | "formatting" | "saving";
 export type ErrorStep = "upload" | "transcription" | "formatting" | "notion" | "slack";
 
 export interface CustomFormat {

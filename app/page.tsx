@@ -65,7 +65,7 @@ export default function Home() {
             <h2 className="text-xl sm:text-3xl font-bold text-slate-900 mb-2 sm:mb-4">
               {t.landing.features.title}
             </h2>
-            <p className="text-sm sm:text-lg text-slate-600">
+            <p className="text-sm sm:text-lg text-slate-600 whitespace-pre-line">
               {t.landing.features.description}
             </p>
           </div>
@@ -181,12 +181,18 @@ export default function Home() {
 
           <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:justify-center sm:gap-8">
             {[
-              { name: "Notion", icon: "📓", description: t.landing.integrations.notion },
-              { name: "Slack", icon: "💬", description: t.landing.integrations.slack },
-              { name: "Google", icon: "🔐", description: t.landing.integrations.google },
+              { name: "Notion", logo: "/logos/notion.png", description: t.landing.integrations.notion },
+              { name: "Slack", logo: "/logos/slack.png", description: t.landing.integrations.slack },
+              { name: "Google", logo: "/logos/google.png", description: t.landing.integrations.google },
             ].map((integration, idx) => (
               <div key={idx} className="card p-3 sm:p-8 text-center sm:min-w-[200px] hover:-translate-y-1 transition-transform duration-300">
-                <div className="text-xl sm:text-4xl mb-1.5 sm:mb-4">{integration.icon}</div>
+                <div className="flex items-center justify-center mb-1.5 sm:mb-4">
+                  <img
+                    src={integration.logo}
+                    alt={`${integration.name} logo`}
+                    className="w-8 h-8 sm:w-12 sm:h-12 object-contain"
+                  />
+                </div>
                 <h3 className="text-xs sm:text-lg font-bold text-slate-900">{integration.name}</h3>
                 <p className="text-xs sm:text-sm text-slate-500 hidden sm:block mt-1">{integration.description}</p>
               </div>

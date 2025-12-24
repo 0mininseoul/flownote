@@ -20,6 +20,7 @@
 | **AI 문서 정리** | GPT-4o-mini로 문서 자동 정리 (기본 포맷: meeting) |
 | **Notion 연동** | 정리된 문서를 Notion 페이지로 자동 생성 |
 | **Slack 알림** | 처리 완료 시 Slack 메시지 전송 |
+| **실시간 처리 상태** | 전사 중/요약 중/저장 중 단계별 상태 표시 |
 | **PWA 지원** | 모바일 홈 화면 추가 가능 |
 | **다국어 지원** | 한국어/영어 자동 감지 및 설정 (i18n) |
 
@@ -74,6 +75,8 @@ flownote/
 │
 ├── components/                   # React 컴포넌트
 │   ├── recorder/                 # 녹음 관련 컴포넌트
+│   ├── navigation/               # 네비게이션 컴포넌트 (bottom-tab)
+│   ├── pwa/                      # PWA 관련 컴포넌트
 │   └── google-login-button.tsx   # Google 로그인 버튼
 │
 ├── lib/                          # 유틸리티 및 서비스
@@ -95,11 +98,21 @@ flownote/
 │   ├── schema.sql                # Supabase PostgreSQL 기본 스키마
 │   └── migrations/               # 데이터베이스 마이그레이션
 │       ├── add_language.sql      # 언어 설정 컬럼 추가
-│       └── add_is_onboarded.sql  # 온보딩 완료 플래그 추가
+│       ├── add_is_onboarded.sql  # 온보딩 완료 플래그 추가
+│       └── add_processing_step.sql # 처리 단계 컬럼 추가
 │
 ├── types/                        # TypeScript 타입 정의
 │
-└── public/                       # 정적 파일 (manifest.json 등)
+├── public/                       # 정적 파일
+│   ├── logos/                    # 연동 서비스 로고 (notion.svg, slack.svg, google.svg)
+│   ├── icons/                    # PWA 아이콘
+│   └── manifest.json             # PWA 매니페스트
+│
+└── docs/                         # 문서
+    ├── LLMS.md                   # LLM 컨텍스트 문서 (본 문서)
+    ├── prd.md                    # 제품 요구사항 문서
+    ├── landing_page_plan.md      # 랜딩 페이지 기획
+    └── FEATURE_SPEC.md           # 기능 명세서
 ```
 
 ---
@@ -131,6 +144,7 @@ audio_file_path   TEXT                     -- NULL (오디오 파일은 저장�
 duration_seconds  INTEGER NOT NULL
 format            TEXT CHECK (meeting|interview|lecture|custom)
 status            TEXT CHECK (processing|completed|failed)
+processing_step   TEXT CHECK (transcription|formatting|saving) -- 현재 처리 단계
 transcript        TEXT                     -- STT 결과 (Groq API에서 받은 텍스트)
 formatted_content TEXT                     -- AI 정리 결과
 notion_page_url   TEXT
@@ -139,7 +153,9 @@ error_step        TEXT CHECK (upload|transcription|formatting|notion|slack)
 created_at        TIMESTAMP
 ```
 
-**참고:** 오디오 파일은 Groq API로 전송 후 즉시 폐기되며, 텍스트(전사 결과)만 데이터베이스에 저장됩니다.
+**참고:**
+- 오디오 파일은 Groq API로 전송 후 즉시 폐기되며, 텍스트(전사 결과)만 데이터베이스에 저장됩니다.
+- `processing_step` 컬럼은 실시간 처리 상태 표시를 위해 사용됩니다 (전사 중/요약 중/저장 중).
 
 ### 4.3 custom_formats 테이블
 ```sql
@@ -163,33 +179,44 @@ created_at TIMESTAMP
 |--------|----------|------|
 | GET | `/api/auth/callback` | Google OAuth 콜백 (locale 유지 지원) |
 | POST | `/api/auth/signout` | 로그아웃 |
+| GET | `/api/auth/notion` | Notion OAuth 시작 |
 | GET | `/api/auth/notion/callback` | Notion OAuth 콜백 |
+| GET | `/api/auth/slack` | Slack OAuth 시작 |
 | GET | `/api/auth/slack/callback` | Slack OAuth 콜백 |
 
 ### 5.2 녹음 API
 | Method | Endpoint | 설명 |
 |--------|----------|------|
 | POST | `/api/recordings` | 녹음 생성 및 업로드 |
-| GET | `/api/recordings` | 녹음 목록 조회 |
+| GET | `/api/recordings` | 녹음 목록 조회 (processing_step 포함) |
 | GET | `/api/recordings/[id]` | 녹음 상세 조회 |
+| PATCH | `/api/recordings/[id]` | 녹음 정보 수정 (제목 등) |
 | DELETE | `/api/recordings/[id]` | 녹음 삭제 |
 
 ### 5.3 사용자 API
 | Method | Endpoint | 설명 |
 |--------|----------|------|
+| GET | `/api/user/data` | 사용자 연동 상태 조회 (notionConnected, slackConnected) |
 | GET | `/api/user/usage` | 사용량 조회 (분) |
-| GET | `/api/user/language` | 언어 설정 조회 |
-| PUT | `/api/user/language` | 언어 설정 업데이트 (ko|en) |
+| POST | `/api/user/language` | 언어 설정 업데이트 (ko|en) |
 | POST | `/api/user/onboarding` | 온보딩 완료 표시 |
 | DELETE | `/api/user/data` | 모든 데이터 삭제 |
+| GET | `/api/user/notion-database` | Notion 데이터베이스 목록 조회 |
 
 ### 5.4 포맷 API
 | Method | Endpoint | 설명 |
 |--------|----------|------|
 | GET | `/api/formats` | 커스텀 포맷 목록 |
 | POST | `/api/formats` | 커스텀 포맷 생성 |
-| PUT | `/api/formats/[id]` | 커스텀 포맷 수정 |
-| DELETE | `/api/formats/[id]` | 커스텀 포맷 삭제 |
+| PUT | `/api/formats` | 커스텀 포맷 수정 / 기본값 설정 |
+| DELETE | `/api/formats` | 커스텀 포맷 삭제 |
+
+### 5.5 Notion API
+| Method | Endpoint | 설명 |
+|--------|----------|------|
+| POST | `/api/notion/databases` | 사용자 Notion 데이터베이스 목록 |
+| POST | `/api/notion/pages` | Notion 페이지 생성 |
+| POST | `/api/notion/database` | 특정 데이터베이스 정보 조회 |
 
 ---
 
@@ -201,21 +228,30 @@ created_at TIMESTAMP
        ↓
 2. Next.js 서버: FormData로 오디오 파일 수신 (메모리에 잠시 보관)
        ↓
-3. Groq API: 서버가 받은 파일을 즉시 Groq로 전송 (POST) - 오디오 파일 폐기
+3. DB 업데이트: processing_step = 'transcription' (전사 중)
        ↓
-4. Supabase DB: 텍스트(전사 결과)만 저장
+4. Groq API: 서버가 받은 파일을 즉시 Groq로 전송 (POST) - 오디오 파일 폐기
        ↓
-5. OpenAI GPT-4o-mini: 텍스트 요약 및 정리 (기본 포맷: meeting)
+5. Supabase DB: 텍스트(전사 결과)만 저장
        ↓
-6. Notion API: 텍스트만 저장 (오디오 파일 없음, 선택사항)
+6. DB 업데이트: processing_step = 'formatting' (요약 중)
        ↓
-7. Slack API: 완료 알림 + Notion 링크 (선택사항)
+7. OpenAI GPT-4o-mini: 텍스트 요약 및 정리 (기본 포맷: meeting)
+       ↓
+8. DB 업데이트: processing_step = 'saving' (저장 중)
+       ↓
+9. Notion API: 텍스트만 저장 (오디오 파일 없음, 선택사항)
+       ↓
+10. Slack API: 완료 알림 + Notion 링크 (선택사항)
+       ↓
+11. DB 업데이트: status = 'completed', processing_step = null
 ```
 
 **주요 특징:**
 - ⚡ 속도 최적화: 스토리지 업로드 시간 절약
 - 💰 비용 절감: Supabase Storage 용량 사용 안 함
 - 🔒 개인정보 보호: 음성 원본을 저장하지 않음
+- 📊 실시간 상태: 3초 간격 폴링으로 처리 단계 실시간 표시
 
 ### 6.2 문서 포맷 종류
 
@@ -231,12 +267,12 @@ created_at TIMESTAMP
 
 | 경로 | 설명 | 주요 기능 |
 |------|------|----------|
-| `/` | 랜딩 페이지 | 서비스 소개, Google 로그인, 다국어 지원 |
-| `/onboarding` | 온보딩 | Notion/Slack 연동, 기본 포맷 선택 |
-| `/dashboard` | 대시보드 | 녹음 버튼, 타이머, 사용량 (기본 포맷: meeting) |
-| `/history` | 히스토리 | 녹음 목록, 처리 상태, Notion 링크 |
-| `/settings` | 설정 | 계정 정보, 통합 관리, 언어 설정, 데이터 삭제 |
-| `/settings/formats` | 포맷 설정 | 커스텀 포맷 CRUD |
+| `/` | 랜딩 페이지 | 서비스 소개, "시작하기"/"무료로 시작하기" 버튼, 다국어 지원 |
+| `/onboarding` | 온보딩 | Notion/Slack 연동 (건너뛰기 가능), 기본 포맷 선택 |
+| `/dashboard` | 대시보드 | 녹음 버튼, 타이머, 노션/슬랙 미연동 경고 표시 |
+| `/history` | 히스토리 | 녹음 목록, 실시간 처리 상태 (전사/요약/저장), 처리 중 안내 문구 |
+| `/recordings/[id]` | 녹음 상세 | 전사본 및 정리된 내용 확인 |
+| `/settings` | 설정 | 계정 정보, 통합 관리, 언어 설정, Notion 저장 위치 설정 |
 
 ---
 
@@ -245,6 +281,7 @@ created_at TIMESTAMP
 - **월 사용량**: 계정당 350분/월 (매월 1일 리셋)
 - **최대 녹음 시간**: 120분
 - **자동 삭제**: 30일 이상 녹음 파일 자동 삭제
+- **커스텀 포맷**: 최대 3개까지 생성 가능
 
 ---
 
@@ -285,10 +322,10 @@ NEXT_PUBLIC_APP_URL=
 - **반응형**: 모바일 퍼스트 (320px~)
 - **PWA**: manifest.json, service worker 지원
 
-## 10.1 다국어 지원 (i18n)
+### 10.1 다국어 지원 (i18n)
 
 - **지원 언어**: 한국어(ko), 영어(en)
-- **자동 감지**: 
+- **자동 감지**:
   - Vercel GeoIP 헤더 기반 국가 감지 (KR → 한국어)
   - Cookie 기반 언어 설정 저장 (`flownote_locale`)
 - **OAuth 콜백**: 로그인 시 locale을 query parameter로 전달하여 언어 설정 유지
@@ -310,6 +347,6 @@ npm run lint     # 린트 검사
 ## 12. 관련 문서
 
 - [README.md](../README.md) - 프로젝트 개요 및 빠른 시작
-- [SETUP.md](../SETUP.md) - 로컬 개발 환경 설정 가이드
-- [DEPLOYMENT.md](../DEPLOYMENT.md) - Vercel 배포 가이드
 - [prd.md](./prd.md) - 제품 요구사항 문서 (상세)
+- [FEATURE_SPEC.md](./FEATURE_SPEC.md) - 기능 명세서
+- [landing_page_plan.md](./landing_page_plan.md) - 랜딩 페이지 기획서

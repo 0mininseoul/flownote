@@ -20,6 +20,18 @@ export default function HistoryPage() {
     fetchRecordings();
   }, []);
 
+  // Polling for processing recordings
+  useEffect(() => {
+    const hasProcessing = recordings.some((r) => r.status === "processing");
+    if (!hasProcessing) return;
+
+    const interval = setInterval(() => {
+      fetchRecordings();
+    }, 3000); // Poll every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [recordings]);
+
   const fetchRecordings = async () => {
     try {
       const response = await fetch("/api/recordings");
@@ -104,7 +116,17 @@ export default function HistoryPage() {
     }
   };
 
-  const getStatusText = (status: string) => {
+  const getStatusText = (status: string, processingStep?: string) => {
+    if (status === "processing" && processingStep) {
+      switch (processingStep) {
+        case "transcription":
+          return t.history.processingSteps.transcription;
+        case "formatting":
+          return t.history.processingSteps.formatting;
+        case "saving":
+          return t.history.processingSteps.saving;
+      }
+    }
     switch (status) {
       case "completed":
         return t.history.status.completed;
@@ -203,6 +225,17 @@ export default function HistoryPage() {
             </div>
           ) : (
             <div className="space-y-3">
+              {/* Processing Notice */}
+              {recordings.some((r) => r.status === "processing") && (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                  <div className="flex items-start gap-2 text-sm text-amber-800">
+                    <svg className="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{t.history.processingNotice}</span>
+                  </div>
+                </div>
+              )}
               {filteredRecordings.map((recording) => (
                 <div
                   key={recording.id}
@@ -256,7 +289,7 @@ export default function HistoryPage() {
                           </h3>
                           <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
                             <span className="flex items-center gap-1">
-                              {getStatusIcon(recording.status)} {getStatusText(recording.status)}
+                              {getStatusIcon(recording.status)} {getStatusText(recording.status, recording.processing_step)}
                             </span>
                             <span>·</span>
                             <span>{formatDurationMinutes(recording.duration_seconds)}</span>

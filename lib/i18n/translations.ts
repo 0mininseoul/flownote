@@ -39,7 +39,7 @@ export const translations = {
       },
       features: {
         title: "가장 가성비 있는 AI 노트 테이커",
-        description: "더 이상 노트 걱정 마세요. 대화에 집중하고, 나머지는 Flownote에게 맡기세요.",
+        description: "더 이상 기록은 걱정하지 마세요.\n대화에 집중하고, 나머지는 Flownote에게 맡기세요.",
         recording: {
           title: "고품질 녹음",
           description: "자동 저장과 클라우드 백업이 되는 웹 녹음. 최대 120분까지.",
@@ -104,6 +104,8 @@ export const translations = {
       maxDuration: "(최대 120분)",
       wakeLockActive: "녹음 중 (화면이 켜진 상태로 유지됩니다)",
       wakeLockInactive: "화면 유지 기능을 사용할 수 없습니다",
+      notionNotConnected: "Notion이 연결되지 않았습니다. 녹음 내용이 Notion에 저장되지 않습니다.",
+      slackNotConnected: "Slack이 연결되지 않았습니다. 완료 알림이 발송되지 않습니다.",
     },
 
     // History
@@ -121,6 +123,12 @@ export const translations = {
         failed: "처리 실패",
         pending: "대기 중",
       },
+      processingSteps: {
+        transcription: "전사 중...",
+        formatting: "요약 중...",
+        saving: "저장 중...",
+      },
+      processingNotice: "이 페이지에서 나가셔도 자동으로 처리 후 슬랙으로 알려드립니다.",
       noRecordings: "녹음이 없습니다",
       noRecordingsDesc: "첫 번째 녹음을 시작해보세요.",
       startRecording: "녹음 시작",
@@ -251,6 +259,7 @@ export const translations = {
           connect: "Slack 연결",
         },
         back: "뒤로",
+        skip: "건너뛰기",
         next: "다음",
       },
       step3: {
@@ -271,7 +280,7 @@ export const translations = {
 
     // Auth
     auth: {
-      signInWithGoogle: "Google로 시작하기",
+      signInWithGoogle: "시작하기",
       getStarted: "무료로 시작하기",
     },
 
@@ -387,6 +396,8 @@ export const translations = {
       maxDuration: "(up to 120 minutes)",
       wakeLockActive: "Recording (screen will stay on)",
       wakeLockInactive: "Screen wake lock unavailable",
+      notionNotConnected: "Notion is not connected. Your recording will not be saved to Notion.",
+      slackNotConnected: "Slack is not connected. You will not receive completion notifications.",
     },
 
     // History
@@ -404,6 +415,12 @@ export const translations = {
         failed: "Failed",
         pending: "Pending",
       },
+      processingSteps: {
+        transcription: "Transcribing...",
+        formatting: "Summarizing...",
+        saving: "Saving...",
+      },
+      processingNotice: "You can leave this page. We'll notify you via Slack when it's done.",
       noRecordings: "No recordings found",
       noRecordingsDesc: "Start your first recording to see it here.",
       startRecording: "Start Recording",
@@ -534,6 +551,7 @@ export const translations = {
           connect: "Connect Slack",
         },
         back: "Back",
+        skip: "Skip",
         next: "Next",
       },
       step3: {
@@ -554,7 +572,7 @@ export const translations = {
 
     // Auth
     auth: {
-      signInWithGoogle: "Continue with Google",
+      signInWithGoogle: "Get Started",
       getStarted: "Get Started Free",
     },
 

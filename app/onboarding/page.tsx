@@ -259,9 +259,15 @@ function OnboardingContent() {
                 <div className="flex gap-3 pt-2">
                   <button
                     onClick={() => setStep(1)}
-                    className="flex-1 py-3 px-4 text-slate-500 font-medium text-sm min-h-[44px]"
+                    className="py-3 px-4 text-slate-500 font-medium text-sm min-h-[44px]"
                   >
                     {t.onboarding.step2.back}
+                  </button>
+                  <button
+                    onClick={() => setStep(3)}
+                    className="py-3 px-4 text-slate-500 font-medium text-sm min-h-[44px]"
+                  >
+                    {t.onboarding.step2.skip}
                   </button>
                   <button
                     onClick={() => setStep(3)}
