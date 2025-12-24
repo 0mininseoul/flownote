@@ -350,11 +350,6 @@ export default function SettingsPage() {
     }
   };
 
-  // 검색어가 기존 항목과 일치하는지 확인
-  const searchTermMatchesExisting = saveTargetSearch.trim() !== "" &&
-    (filteredDatabases.some(db => db.title.toLowerCase() === saveTargetSearch.toLowerCase()) ||
-     filteredPages.some(page => page.title.toLowerCase() === saveTargetSearch.toLowerCase()));
-
   // 필터링된 결과
   const filteredDatabases = databases.filter(db =>
     db.title.toLowerCase().includes(saveTargetSearch.toLowerCase())
@@ -362,6 +357,11 @@ export default function SettingsPage() {
   const filteredPages = pages.filter(page =>
     page.title.toLowerCase().includes(saveTargetSearch.toLowerCase())
   );
+
+  // 검색어가 기존 항목과 일치하는지 확인
+  const searchTermMatchesExisting = saveTargetSearch.trim() !== "" &&
+    (filteredDatabases.some(db => db.title.toLowerCase() === saveTargetSearch.toLowerCase()) ||
+     filteredPages.some(page => page.title.toLowerCase() === saveTargetSearch.toLowerCase()));
 
   const handleDeleteAllData = async () => {
     const confirmed = confirm(t.settings.data.deleteConfirm);
