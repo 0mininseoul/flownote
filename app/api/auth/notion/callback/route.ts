@@ -52,15 +52,25 @@ export async function GET(request: NextRequest) {
     console.log("[Notion Callback] Using redirect URI:", redirectUri);
 
     const { access_token } = await exchangeNotionCode(code, redirectUri);
+    console.log("[Notion Callback] Got access token, updating DB for user:", user.id);
 
     // Update user with Notion credentials
-    await supabase
+    const { error: updateError } = await supabase
       .from("users")
       .update({
         notion_access_token: access_token,
         // notion_database_id: will be set later when user selects
       })
       .eq("id", user.id);
+
+    if (updateError) {
+      console.error("[Notion Callback] DB update error:", updateError);
+      return NextResponse.redirect(
+        `${appUrl}${returnTo}?error=db_update_failed`
+      );
+    }
+
+    console.log("[Notion Callback] Successfully saved token to DB");
 
     const redirectUrl = new URL(`${appUrl}${returnTo}`);
     redirectUrl.searchParams.set("notion", "connected");

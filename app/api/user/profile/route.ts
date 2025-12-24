@@ -15,11 +15,20 @@ export async function GET() {
     }
 
     // Get user data from users table including connection status
-    const { data: userData } = await supabase
+    const { data: userData, error: dbError } = await supabase
       .from("users")
       .select("notion_access_token, notion_database_id, slack_access_token, notion_save_target")
       .eq("id", user.id)
       .single();
+
+    // 디버깅: DB 조회 결과 확인
+    console.log("[Profile API] User ID:", user.id);
+    console.log("[Profile API] DB query result:", {
+      hasData: !!userData,
+      dbError: dbError?.message,
+      hasNotionToken: !!userData?.notion_access_token,
+      notionTokenLength: userData?.notion_access_token?.length || 0,
+    });
 
     return NextResponse.json({
       email: user.email,

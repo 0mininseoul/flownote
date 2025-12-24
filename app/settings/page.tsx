@@ -99,6 +99,14 @@ export default function SettingsPage() {
       const usageData = await usageResponse.json();
       const userData = await userResponse.json();
 
+      // 디버깅: API 응답 확인
+      console.log("[Settings] User profile response:", {
+        hasNotionToken: !!userData.notion_access_token,
+        hasSlackToken: !!userData.slack_access_token,
+        notionDbId: userData.notion_database_id,
+        saveTarget: userData.notion_save_target,
+      });
+
       setUsage({
         used: usageData.used || 0,
         limit: usageData.limit || 350,
