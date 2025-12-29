@@ -126,22 +126,22 @@ export default function DashboardPage() {
                           <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                           </svg>
-                          <span>{t.dashboard.slackNotConnected}</span>
+                          <span className="leading-relaxed">
+                            Slack이 연결되지 않았습니다.<br />
+                            완료 알림이 발송되지 않습니다.
+                          </span>
                         </div>
                       </div>
                     )}
                   </div>
                 )}
 
-                <div className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-xl">
-                  <div className="flex items-start gap-2 text-xs text-blue-700">
-                    <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>음성 녹음해도 어차피 안 들으시죠? 음성은 텍스트로 변환된 후 즉시 폐기해 드립니다.</span>
-                  </div>
-                </div>
               </div>
+
+              <p className="text-center text-xs text-slate-500 mt-4 leading-relaxed">
+                음성 녹음해도 어차피 안 들으시죠?<br />
+                음성은 텍스트로 변환된 후 즉시 폐기해 드립니다.
+              </p>
 
               <AudioRecorder
                 onRecordingComplete={handleRecordingComplete}

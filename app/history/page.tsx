@@ -225,17 +225,6 @@ export default function HistoryPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {/* Processing Notice */}
-              {recordings.some((r) => r.status === "processing") && (
-                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
-                  <div className="flex items-start gap-2 text-sm text-amber-800">
-                    <svg className="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>{t.history.processingNotice}</span>
-                  </div>
-                </div>
-              )}
               {filteredRecordings.map((recording) => (
                 <div
                   key={recording.id}
@@ -300,11 +289,14 @@ export default function HistoryPage() {
                       {/* Processing Status Info */}
                       {recording.status === "processing" && (
                         <div className="mt-3 p-2 bg-blue-50 border border-blue-100 rounded-lg">
-                          <div className="flex items-center gap-2 text-xs text-blue-700">
-                            <svg className="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="flex items-start gap-2 text-xs text-blue-700">
+                            <svg className="w-3 h-3 mt-0.5 flex-shrink-0 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                             </svg>
-                            <span>{t.history.processingInfo}</span>
+                            <span className="leading-relaxed">
+                              이 페이지에서 나가셔도 자동으로 처리됩니다.<br />
+                              완료되면 슬랙으로 알려드립니다.
+                            </span>
                           </div>
                         </div>
                       )}
