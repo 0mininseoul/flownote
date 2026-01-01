@@ -9,6 +9,10 @@ export const metadata: Metadata = {
   title: "Flownote - 자동 음성 문서화 서비스",
   description: "녹음 버튼 하나만 누르면, 자동으로 정리된 문서를 받아볼 수 있는 자동문서화 솔루션",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/icons/apple-touch-icon.png",
+    apple: "/icons/apple-touch-icon.png",
+  },
 };
 
 export const viewport = {

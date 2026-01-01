@@ -44,20 +44,24 @@ export default function HistoryPage() {
     }
   };
 
-  const deleteRecording = async (id: string) => {
-    if (!confirm(t.history.deleteConfirm)) return;
+  const hideRecording = async (id: string) => {
+    if (!confirm("이 녹음을 목록에서 숨기시겠습니까?\n\n데이터는 삭제되지 않으며, 앞으로 화면에 표시되지 않습니다.")) return;
 
     try {
       const response = await fetch(`/api/recordings/${id}`, {
-        method: "DELETE",
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_hidden: true }),
       });
 
       if (response.ok) {
         setRecordings(recordings.filter((r) => r.id !== id));
+      } else {
+        throw new Error("Hide failed");
       }
     } catch (error) {
-      console.error("Failed to delete recording:", error);
-      alert(t.history.deleteFailed);
+      console.error("Failed to hide recording:", error);
+      alert("녹음을 숨기는데 실패했습니다.");
     }
   };
 
@@ -228,13 +232,27 @@ export default function HistoryPage() {
               {filteredRecordings.map((recording) => (
                 <div
                   key={recording.id}
-                  className="card-touchable p-4"
+                  className="card-touchable p-4 relative"
                   onClick={() => {
                     if (recording.status === "completed" && recording.transcript) {
                       router.push(`/recordings/${recording.id}`);
                     }
                   }}
                 >
+                  {/* Hide Button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      hideRecording(recording.id);
+                    }}
+                    className="absolute top-3 right-3 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors min-h-[32px] min-w-[32px] flex items-center justify-center"
+                    aria-label="녹음 숨기기"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+
                   <div className="flex items-start gap-3">
                     {/* Icon */}
                     <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-xl flex-shrink-0">
@@ -242,7 +260,7 @@ export default function HistoryPage() {
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 pr-6">
                       {editingId === recording.id ? (
                         <div className="flex gap-2 items-center" onClick={(e) => e.stopPropagation()}>
                           <input
@@ -332,14 +350,6 @@ export default function HistoryPage() {
                               </svg>
                             </a>
                           )}
-                          <button
-                            onClick={() => deleteRecording(recording.id)}
-                            className="p-2 text-slate-400 rounded-lg min-h-[36px] min-w-[36px] flex items-center justify-center"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
                         </div>
                       )}
 
@@ -357,14 +367,6 @@ export default function HistoryPage() {
                               <span>{t.history.viewTranscript}</span>
                             </button>
                           )}
-                          <button
-                            onClick={() => deleteRecording(recording.id)}
-                            className="p-2 text-slate-400 rounded-lg min-h-[36px] min-w-[36px] flex items-center justify-center"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
                         </div>
                       )}
                     </div>

@@ -60,18 +60,41 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { title } = body;
+    const { title, is_hidden } = body;
 
-    if (!title || typeof title !== "string" || title.trim().length === 0) {
+    // Build update object
+    const updateData: any = {};
+
+    if (title !== undefined) {
+      if (typeof title !== "string" || title.trim().length === 0) {
+        return NextResponse.json(
+          { error: "Invalid title" },
+          { status: 400 }
+        );
+      }
+      updateData.title = title.trim();
+    }
+
+    if (is_hidden !== undefined) {
+      if (typeof is_hidden !== "boolean") {
+        return NextResponse.json(
+          { error: "Invalid is_hidden value" },
+          { status: 400 }
+        );
+      }
+      updateData.is_hidden = is_hidden;
+    }
+
+    if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
-        { error: "Invalid title" },
+        { error: "No valid fields to update" },
         { status: 400 }
       );
     }
 
     const { data, error } = await supabase
       .from("recordings")
-      .update({ title: title.trim() })
+      .update(updateData)
       .eq("id", id)
       .eq("user_id", user.id)
       .select()

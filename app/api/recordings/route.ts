@@ -148,6 +148,7 @@ export async function GET(request: NextRequest) {
       .from("recordings")
       .select("*")
       .eq("user_id", user.id)
+      .or("is_hidden.is.null,is_hidden.eq.false")
       .order("created_at", { ascending: false });
 
     if (error) {

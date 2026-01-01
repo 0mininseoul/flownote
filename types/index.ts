@@ -26,6 +26,7 @@ export interface Recording {
   notion_page_url?: string;
   error_message?: string;
   error_step?: ErrorStep;
+  is_hidden?: boolean;
   created_at: string;
 }
 
