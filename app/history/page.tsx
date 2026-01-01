@@ -45,7 +45,7 @@ export default function HistoryPage() {
   };
 
   const hideRecording = async (id: string) => {
-    if (!confirm("이 녹음을 목록에서 숨기시겠습니까?\n\n데이터는 삭제되지 않으며, 앞으로 화면에 표시되지 않습니다.")) return;
+    if (!confirm("이 녹음을 삭제하시겠습니까?")) return;
 
     try {
       const response = await fetch(`/api/recordings/${id}`, {
