@@ -12,14 +12,116 @@ function getHeaders(accessToken: string): Record<string, string> {
 
 export async function createNotionPage(
   accessToken: string,
-  databaseId: string,
+  targetId: string,
   title: string,
   content: string,
   format: string,
-  duration: number
+  duration: number,
+  targetType: "database" | "page" = "database"
 ): Promise<string> {
   // Convert markdown content to Notion blocks
   const blocks = convertMarkdownToBlocks(content);
+
+  if (targetType === "page") {
+    // 페이지 하위에 새 페이지로 생성
+    const response = await fetch(`${NOTION_API_BASE}/pages`, {
+      method: "POST",
+      headers: getHeaders(accessToken),
+      body: JSON.stringify({
+        parent: { page_id: targetId },
+        properties: {
+          title: {
+            title: [{ text: { content: title } }],
+          },
+        },
+        children: blocks,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(`Notion API error: ${error.message || response.statusText}`);
+    }
+
+    const data = await response.json();
+    return `https://notion.so/${data.id.replace(/-/g, "")}`;
+  }
+
+  // 데이터베이스에 새 아이템으로 생성
+  // 먼저 전체 속성으로 시도하고, 실패하면 title만으로 재시도
+  try {
+    const response = await fetch(`${NOTION_API_BASE}/pages`, {
+      method: "POST",
+      headers: getHeaders(accessToken),
+      body: JSON.stringify({
+        parent: { database_id: targetId },
+        properties: {
+          title: {
+            title: [{ text: { content: title } }],
+          },
+          format: {
+            select: { name: format },
+          },
+          duration: {
+            number: duration,
+          },
+          created: {
+            date: { start: new Date().toISOString() },
+          },
+        },
+        children: blocks,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      // 속성 관련 에러인 경우 title만으로 재시도
+      if (error.message && error.message.includes("is not a property")) {
+        console.log("Database properties not found, retrying with title only...");
+        return await createNotionPageWithTitleOnly(accessToken, targetId, title, blocks);
+      }
+      throw new Error(`Notion API error: ${error.message || response.statusText}`);
+    }
+
+    const data = await response.json();
+    return `https://notion.so/${data.id.replace(/-/g, "")}`;
+  } catch (error) {
+    // 속성 에러가 아닌 경우 재throw
+    if (error instanceof Error && error.message.includes("is not a property")) {
+      console.log("Database properties not found, retrying with title only...");
+      return await createNotionPageWithTitleOnly(accessToken, targetId, title, blocks);
+    }
+    throw error;
+  }
+}
+
+// title만으로 노션 페이지 생성 (기존 데이터베이스용)
+async function createNotionPageWithTitleOnly(
+  accessToken: string,
+  databaseId: string,
+  title: string,
+  blocks: any[]
+): Promise<string> {
+  // 먼저 데이터베이스의 title 속성 이름을 확인
+  const dbResponse = await fetch(`${NOTION_API_BASE}/databases/${databaseId}`, {
+    method: "GET",
+    headers: getHeaders(accessToken),
+  });
+
+  if (!dbResponse.ok) {
+    throw new Error("Failed to fetch database schema");
+  }
+
+  const dbData = await dbResponse.json();
+
+  // title 타입의 속성 이름 찾기 (기본값: "title" 또는 "Name" 또는 "이름")
+  let titlePropertyName = "title";
+  for (const [propName, propValue] of Object.entries(dbData.properties)) {
+    if ((propValue as any).type === "title") {
+      titlePropertyName = propName;
+      break;
+    }
+  }
 
   const response = await fetch(`${NOTION_API_BASE}/pages`, {
     method: "POST",
@@ -27,17 +129,8 @@ export async function createNotionPage(
     body: JSON.stringify({
       parent: { database_id: databaseId },
       properties: {
-        title: {
+        [titlePropertyName]: {
           title: [{ text: { content: title } }],
-        },
-        format: {
-          select: { name: format },
-        },
-        duration: {
-          number: duration,
-        },
-        created: {
-          date: { start: new Date().toISOString() },
         },
       },
       children: blocks,

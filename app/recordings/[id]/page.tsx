@@ -167,15 +167,10 @@ export default function RecordingDetailPage() {
               )}
             </div>
 
-            {/* Info Banner */}
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg">
-              <div className="flex items-start gap-2 text-sm text-blue-700">
-                <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>오디오 파일은 저장되지 않습니다. 음성은 Groq API로 전송되어 텍스트로 변환된 후 즉시 폐기됩니다.</span>
-              </div>
-            </div>
+            {/* Info Text */}
+            <p className="mt-4 text-xs text-slate-400">
+              * 오디오 파일은 저장되지 않으며, 텍스트 변환 후 즉시 폐기됩니다.
+            </p>
           </div>
 
           {/* Content Tabs - 전사본이나 요약본이 있으면 표시 (노션 저장 여부와 관계없이) */}

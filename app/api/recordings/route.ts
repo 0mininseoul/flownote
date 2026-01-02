@@ -293,7 +293,8 @@ async function processRecording(
             title,
             formattedContent,
             format,
-            duration
+            duration,
+            userData.notion_save_target_type || "database"
           );
 
           await supabase
