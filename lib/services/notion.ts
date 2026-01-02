@@ -10,6 +10,21 @@ function getHeaders(accessToken: string): Record<string, string> {
   };
 }
 
+// Helper function to extract title from page properties
+// Database items may have different title property names (e.g., "이름", "제목", "Name", etc.)
+function extractPageTitle(properties: Record<string, any> | undefined): string {
+  if (!properties) return "Untitled";
+
+  // Find the property with type "title"
+  for (const [, propValue] of Object.entries(properties)) {
+    if (propValue?.type === "title" && propValue?.title?.length > 0) {
+      return propValue.title[0]?.plain_text || "Untitled";
+    }
+  }
+
+  return "Untitled";
+}
+
 export async function createNotionPage(
   accessToken: string,
   targetId: string,
@@ -224,13 +239,27 @@ function convertMarkdownToBlocks(markdown: string): any[] {
 export async function getNotionDatabases(accessToken: string): Promise<any[]> {
   try {
     const databaseMap = new Map<string, any>();
-    const visitedPages = new Set<string>();
+    const visitedBlocks = new Set<string>();
 
-    // Helper function to recursively explore pages and find databases
+    // Block types that can have children
+    const BLOCKS_WITH_CHILDREN = [
+      "child_page",
+      "column_list",
+      "column",
+      "toggle",
+      "bulleted_list_item",
+      "numbered_list_item",
+      "to_do",
+      "quote",
+      "callout",
+      "synced_block",
+    ];
+
+    // Helper function to recursively explore blocks and find databases
     async function exploreBlockChildren(blockId: string, depth: number = 0): Promise<void> {
       // Limit recursion depth to prevent infinite loops
-      if (depth > 3 || visitedPages.has(blockId)) return;
-      visitedPages.add(blockId);
+      if (depth > 5 || visitedBlocks.has(blockId)) return;
+      visitedBlocks.add(blockId);
 
       try {
         const blocksResponse = await fetch(
@@ -241,14 +270,19 @@ export async function getNotionDatabases(accessToken: string): Promise<any[]> {
           }
         );
 
-        if (!blocksResponse.ok) return;
+        if (!blocksResponse.ok) {
+          console.log(`[Notion] Failed to get children for ${blockId}: ${blocksResponse.status}`);
+          return;
+        }
 
         const blocksData = await blocksResponse.json();
+        console.log(`[Notion] Found ${blocksData.results.length} blocks in ${blockId}`);
 
         for (const block of blocksData.results) {
           // Found a child_database
           if (block.type === "child_database") {
             const dbId = block.id;
+            console.log(`[Notion] Found child_database: ${block.child_database?.title}`);
             if (!databaseMap.has(dbId)) {
               databaseMap.set(dbId, {
                 id: dbId,
@@ -258,14 +292,14 @@ export async function getNotionDatabases(accessToken: string): Promise<any[]> {
               });
             }
           }
-          // Found a child_page - recursively explore it
-          else if (block.type === "child_page") {
+          // Recursively explore blocks that can have children
+          else if (BLOCKS_WITH_CHILDREN.includes(block.type) && block.has_children) {
             await exploreBlockChildren(block.id, depth + 1);
           }
         }
       } catch (error) {
         // Skip blocks we can't read
-        console.warn(`Could not read blocks for ${blockId}:`, error);
+        console.warn(`[Notion] Could not read blocks for ${blockId}:`, error);
       }
     }
 
@@ -287,6 +321,7 @@ export async function getNotionDatabases(accessToken: string): Promise<any[]> {
 
     if (dbSearchResponse.ok) {
       const dbSearchData = await dbSearchResponse.json();
+      console.log(`[Notion] Search found ${dbSearchData.results.length} databases directly`);
       dbSearchData.results.forEach((db: any) => {
         databaseMap.set(db.id, {
           id: db.id,
@@ -315,12 +350,21 @@ export async function getNotionDatabases(accessToken: string): Promise<any[]> {
 
     if (pageSearchResponse.ok) {
       const pageSearchData = await pageSearchResponse.json();
+      console.log(`[Notion] Search found ${pageSearchData.results.length} pages`);
+
+      // Log page titles for debugging
+      pageSearchData.results.forEach((page: any) => {
+        const title = extractPageTitle(page.properties);
+        console.log(`[Notion] Page: ${title} (${page.id})`);
+      });
 
       // Explore each page's children recursively
       for (const page of pageSearchData.results) {
         await exploreBlockChildren(page.id, 0);
       }
     }
+
+    console.log(`[Notion] Total databases found: ${databaseMap.size}`);
 
     // Convert map to array and sort by last_edited_time
     return Array.from(databaseMap.values()).sort(
@@ -463,13 +507,27 @@ export async function createNotionStandalonePage(
 export async function getNotionPages(accessToken: string): Promise<any[]> {
   try {
     const pageMap = new Map<string, any>();
-    const visitedPages = new Set<string>();
+    const visitedBlocks = new Set<string>();
 
-    // Helper function to recursively explore pages and find child pages
+    // Block types that can have children
+    const BLOCKS_WITH_CHILDREN = [
+      "child_page",
+      "column_list",
+      "column",
+      "toggle",
+      "bulleted_list_item",
+      "numbered_list_item",
+      "to_do",
+      "quote",
+      "callout",
+      "synced_block",
+    ];
+
+    // Helper function to recursively explore blocks and find child pages
     async function exploreBlockChildren(blockId: string, depth: number = 0): Promise<void> {
       // Limit recursion depth to prevent infinite loops
-      if (depth > 3 || visitedPages.has(blockId)) return;
-      visitedPages.add(blockId);
+      if (depth > 5 || visitedBlocks.has(blockId)) return;
+      visitedBlocks.add(blockId);
 
       try {
         const blocksResponse = await fetch(
@@ -496,6 +554,10 @@ export async function getNotionPages(accessToken: string): Promise<any[]> {
                 last_edited_time: block.last_edited_time,
               });
             }
+            await exploreBlockChildren(block.id, depth + 1);
+          }
+          // Recursively explore other blocks that can have children
+          else if (BLOCKS_WITH_CHILDREN.includes(block.type) && block.has_children) {
             await exploreBlockChildren(block.id, depth + 1);
           }
         }
@@ -531,9 +593,7 @@ export async function getNotionPages(accessToken: string): Promise<any[]> {
     data.results.forEach((page: any) => {
       pageMap.set(page.id, {
         id: page.id,
-        title: page.properties?.title?.title?.[0]?.plain_text ||
-               page.properties?.Name?.title?.[0]?.plain_text ||
-               "Untitled",
+        title: extractPageTitle(page.properties),
         url: page.url,
         last_edited_time: page.last_edited_time,
       });
