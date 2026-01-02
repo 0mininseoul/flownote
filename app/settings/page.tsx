@@ -18,7 +18,7 @@ export default async function SettingsPage() {
   const [{ data: userData }, { data: formatsData }] = await Promise.all([
     supabase
       .from("users")
-      .select("monthly_minutes_used, notion_access_token, notion_database_id, slack_access_token")
+      .select("monthly_minutes_used, notion_access_token, notion_database_id, notion_save_target_type, notion_save_target_title, slack_access_token")
       .eq("id", user.id)
       .single(),
     supabase
@@ -37,6 +37,8 @@ export default async function SettingsPage() {
     notionConnected: !!userData?.notion_access_token,
     slackConnected: !!userData?.slack_access_token,
     notionDatabaseId: userData?.notion_database_id || null,
+    notionSaveTargetType: userData?.notion_save_target_type || null,
+    notionSaveTargetTitle: userData?.notion_save_target_title || null,
     customFormats: formatsData || [],
   };
 

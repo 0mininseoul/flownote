@@ -32,6 +32,8 @@ export async function PUT(request: NextRequest) {
       .from("users")
       .update({
         notion_database_id: targetId,
+        notion_save_target_type: saveTargetType || (databaseId ? "database" : "page"),
+        notion_save_target_title: title || "Untitled",
       })
       .eq("id", user.id);
 
@@ -79,6 +81,8 @@ export async function DELETE() {
       .update({
         notion_access_token: null,
         notion_database_id: null,
+        notion_save_target_type: null,
+        notion_save_target_title: null,
       })
       .eq("id", user.id);
 

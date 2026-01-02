@@ -178,8 +178,8 @@ export default function RecordingDetailPage() {
             </div>
           </div>
 
-          {/* Content Tabs */}
-          {recording.status === "completed" && (recording.transcript || recording.formatted_content) && (
+          {/* Content Tabs - 전사본이나 요약본이 있으면 표시 (노션 저장 여부와 관계없이) */}
+          {(recording.transcript || recording.formatted_content) && (
             <div className="mb-4">
               <div className="flex gap-2 border-b border-slate-200">
                 {recording.formatted_content && (
@@ -210,40 +210,31 @@ export default function RecordingDetailPage() {
             </div>
           )}
 
-          {/* Content */}
-          {recording.status === "processing" && (
-            <div className="card p-12 text-center">
-              <div className="flex justify-center mb-4">
-                <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2">처리 중...</h3>
-              <p className="text-slate-500">음성을 텍스트로 변환하고 있습니다. 잠시만 기다려주세요.</p>
-            </div>
-          )}
-
-          {recording.status === "failed" && (
+          {/* 완전 실패 (전사본도 없는 경우) */}
+          {recording.status === "failed" && !recording.transcript && !recording.formatted_content && (
             <div className="card p-6">
-              <div className="p-4 bg-red-50 border border-red-100 rounded-lg mb-4">
+              <div className="p-4 bg-red-50 border border-red-100 rounded-lg">
                 <h3 className="text-red-600 font-semibold mb-2">처리 실패</h3>
                 {recording.error_message && (
                   <p className="text-red-700 text-sm">{recording.error_message}</p>
                 )}
               </div>
-              {recording.transcript && (
-                <div>
-                  <h3 className="text-lg font-bold text-slate-900 mb-3">전사본 (부분 완료)</h3>
-                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                    <pre className="whitespace-pre-wrap text-sm text-slate-700 font-sans">
-                      {recording.transcript}
-                    </pre>
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
-          {recording.status === "completed" && (
+          {/* 전사본이나 요약본이 있으면 표시 (노션 저장 여부와 관계없이) */}
+          {(recording.transcript || recording.formatted_content) && (
             <div className="card p-6">
+              {/* 노션 저장 실패 메시지 */}
+              {recording.error_step === "notion" && recording.error_message && (
+                <div className="mb-4 p-3 bg-amber-50 border border-amber-100 rounded-lg">
+                  <div className="flex items-start gap-2 text-sm text-amber-700">
+                    <span className="font-semibold">⚠️ 저장 실패:</span>
+                    <span>{recording.error_message}</span>
+                  </div>
+                </div>
+              )}
+
               {viewMode === "formatted" && recording.formatted_content ? (
                 <div>
                   <div className="mb-4 flex items-center justify-between">
@@ -289,6 +280,17 @@ export default function RecordingDetailPage() {
                   <p className="text-slate-500">콘텐츠를 불러올 수 없습니다.</p>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* 아직 처리 중이고 전사본도 없는 경우 */}
+          {recording.status === "processing" && !recording.transcript && !recording.formatted_content && (
+            <div className="card p-12 text-center">
+              <div className="flex justify-center mb-4">
+                <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">처리 중...</h3>
+              <p className="text-slate-500">음성을 텍스트로 변환하고 있습니다. 잠시만 기다려주세요.</p>
             </div>
           )}
         </div>

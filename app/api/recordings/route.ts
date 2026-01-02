@@ -267,42 +267,54 @@ async function processRecording(
     // Step 3: Create Notion page (optional)
     // Note: Audio file is not attached to Notion page (only text content)
     let notionUrl = "";
-    if (userData.notion_access_token && userData.notion_database_id) {
-      try {
-        console.log(`[${recordingId}] Step 3: Creating Notion page...`);
-
-        // Update processing_step to 'saving'
-        await supabase
-          .from("recordings")
-          .update({ processing_step: "saving" })
-          .eq("id", recordingId);
-        notionUrl = await createNotionPage(
-          userData.notion_access_token,
-          userData.notion_database_id,
-          title,
-          formattedContent,
-          format,
-          duration
-        );
-
-        await supabase
-          .from("recordings")
-          .update({ notion_page_url: notionUrl })
-          .eq("id", recordingId);
-
-        console.log(`[${recordingId}] Notion page created: ${notionUrl}`);
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Unknown Notion error";
-        console.error(`[${recordingId}] Notion creation failed:`, errorMessage);
-
-        // Notion failure is not critical - continue processing
+    if (userData.notion_access_token) {
+      if (!userData.notion_database_id) {
+        // 노션 연결은 됐지만 저장 위치가 지정되지 않은 경우
+        console.log(`[${recordingId}] Notion connected but no save target set`);
         await supabase
           .from("recordings")
           .update({
             error_step: "notion",
-            error_message: `Notion integration failed: ${errorMessage}`
+            error_message: "노션 저장 위치가 지정되지 않았습니다. 설정에서 저장 위치를 선택해주세요."
           })
           .eq("id", recordingId);
+      } else {
+        try {
+          console.log(`[${recordingId}] Step 3: Creating Notion page...`);
+
+          // Update processing_step to 'saving'
+          await supabase
+            .from("recordings")
+            .update({ processing_step: "saving" })
+            .eq("id", recordingId);
+          notionUrl = await createNotionPage(
+            userData.notion_access_token,
+            userData.notion_database_id,
+            title,
+            formattedContent,
+            format,
+            duration
+          );
+
+          await supabase
+            .from("recordings")
+            .update({ notion_page_url: notionUrl })
+            .eq("id", recordingId);
+
+          console.log(`[${recordingId}] Notion page created: ${notionUrl}`);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : "Unknown Notion error";
+          console.error(`[${recordingId}] Notion creation failed:`, errorMessage);
+
+          // Notion failure is not critical - continue processing
+          await supabase
+            .from("recordings")
+            .update({
+              error_step: "notion",
+              error_message: `Notion 저장 실패: ${errorMessage}`
+            })
+            .eq("id", recordingId);
+        }
       }
     }
 

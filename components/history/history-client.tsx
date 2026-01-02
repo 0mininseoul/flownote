@@ -212,9 +212,10 @@ export function HistoryClient({ initialRecordings }: HistoryClientProps) {
             {filteredRecordings.map((recording) => (
               <div
                 key={recording.id}
-                className="card-touchable p-4 relative"
+                className={`card-touchable p-4 relative ${recording.transcript ? 'cursor-pointer' : 'cursor-default'}`}
                 onClick={() => {
-                  if (recording.status === "completed" && recording.transcript) {
+                  // 전사본이 있으면 상세 페이지로 이동 (노션 저장 여부와 관계없이)
+                  if (recording.transcript) {
                     router.push(`/recordings/${recording.id}`);
                   }
                 }}
@@ -309,6 +310,18 @@ export function HistoryClient({ initialRecordings }: HistoryClientProps) {
                           )}
                         </div>
                         <p className="text-xs text-red-600 mt-1 line-clamp-2">
+                          {recording.error_message}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Completed - Notion error message (저장 실패한 경우) */}
+                    {recording.status === "completed" && recording.error_step === "notion" && recording.error_message && (
+                      <div className="mt-3 p-2 bg-amber-50 border border-amber-100 rounded-lg">
+                        <div className="flex items-start gap-1 text-xs text-amber-700">
+                          <span className="font-semibold">⚠️ 저장 실패</span>
+                        </div>
+                        <p className="text-xs text-amber-600 mt-1">
                           {recording.error_message}
                         </p>
                       </div>

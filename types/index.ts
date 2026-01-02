@@ -4,6 +4,8 @@ export interface User {
   google_id: string;
   notion_access_token?: string;
   notion_database_id?: string;
+  notion_save_target_type?: "database" | "page";
+  notion_save_target_title?: string;
   slack_access_token?: string;
   slack_channel_id?: string;
   monthly_minutes_used: number;

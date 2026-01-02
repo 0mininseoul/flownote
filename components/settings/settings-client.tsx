@@ -38,6 +38,8 @@ interface InitialData {
   notionConnected: boolean;
   slackConnected: boolean;
   notionDatabaseId: string | null;
+  notionSaveTargetType: "database" | "page" | null;
+  notionSaveTargetTitle: string | null;
   customFormats: CustomFormat[];
 }
 
@@ -65,7 +67,17 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
 
   // Notion 기본 저장 위치 드롭다운
   const [showSaveTargetDropdown, setShowSaveTargetDropdown] = useState(false);
-  const [saveTarget, setSaveTarget] = useState<NotionSaveTarget | null>(null);
+  const [saveTarget, setSaveTarget] = useState<NotionSaveTarget | null>(() => {
+    // 초기 데이터에서 저장 위치 정보가 있으면 설정
+    if (initialData.notionDatabaseId && initialData.notionSaveTargetType && initialData.notionSaveTargetTitle) {
+      return {
+        type: initialData.notionSaveTargetType,
+        id: initialData.notionDatabaseId,
+        title: initialData.notionSaveTargetTitle,
+      };
+    }
+    return null;
+  });
   const [saveTargetSearch, setSaveTargetSearch] = useState("");
   const [dropdownLoading, setDropdownLoading] = useState(false);
 
