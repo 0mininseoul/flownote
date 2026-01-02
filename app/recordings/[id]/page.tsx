@@ -60,6 +60,29 @@ export default function RecordingDetailPage() {
     }
   };
 
+  // 사용자 친화적 에러 메시지 반환 (기술적 에러 로그 숨김)
+  const getUserFriendlyErrorMessage = (errorStep?: string, errorMessage?: string) => {
+    // 노션 저장 위치 미설정 메시지는 그대로 표시
+    if (errorMessage?.includes("저장 위치가 지정되지 않았습니다")) {
+      return errorMessage;
+    }
+
+    switch (errorStep) {
+      case "transcription":
+        return "음성 변환 중 오류가 발생했습니다. 다시 녹음해주세요.";
+      case "formatting":
+        return "문서 정리 중 오류가 발생했습니다.";
+      case "notion":
+        return "노션 저장 중 오류가 발생했습니다. 설정을 확인해주세요.";
+      case "slack":
+        return "슬랙 알림 전송 중 오류가 발생했습니다.";
+      case "upload":
+        return "녹음 파일 처리 중 오류가 발생했습니다. 다시 녹음해주세요.";
+      default:
+        return "처리 중 오류가 발생했습니다.";
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -210,9 +233,9 @@ export default function RecordingDetailPage() {
             <div className="card p-6">
               <div className="p-4 bg-red-50 border border-red-100 rounded-lg">
                 <h3 className="text-red-600 font-semibold mb-2">처리 실패</h3>
-                {recording.error_message && (
-                  <p className="text-red-700 text-sm">{recording.error_message}</p>
-                )}
+                <p className="text-red-700 text-sm">
+                  {getUserFriendlyErrorMessage(recording.error_step, recording.error_message)}
+                </p>
               </div>
             </div>
           )}
@@ -221,12 +244,11 @@ export default function RecordingDetailPage() {
           {(recording.transcript || recording.formatted_content) && (
             <div className="card p-6">
               {/* 노션 저장 실패 메시지 */}
-              {recording.error_step === "notion" && recording.error_message && (
+              {recording.error_step === "notion" && (
                 <div className="mb-4 p-3 bg-amber-50 border border-amber-100 rounded-lg">
-                  <div className="flex items-start gap-2 text-sm text-amber-700">
-                    <span className="font-semibold">⚠️ 저장 실패:</span>
-                    <span>{recording.error_message}</span>
-                  </div>
+                  <p className="text-sm text-amber-700">
+                    {getUserFriendlyErrorMessage(recording.error_step, recording.error_message)}
+                  </p>
                 </div>
               )}
 

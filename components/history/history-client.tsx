@@ -152,6 +152,29 @@ export function HistoryClient({ initialRecordings }: HistoryClientProps) {
     }
   };
 
+  // 사용자 친화적 에러 메시지 반환 (기술적 에러 로그 숨김)
+  const getUserFriendlyErrorMessage = (errorStep?: string, errorMessage?: string) => {
+    // 노션 저장 위치 미설정 메시지는 그대로 표시
+    if (errorMessage?.includes("저장 위치가 지정되지 않았습니다")) {
+      return errorMessage;
+    }
+
+    switch (errorStep) {
+      case "transcription":
+        return "음성 변환 중 오류가 발생했습니다. 다시 녹음해주세요.";
+      case "formatting":
+        return "문서 정리 중 오류가 발생했습니다.";
+      case "notion":
+        return "노션 저장 중 오류가 발생했습니다. 설정을 확인해주세요.";
+      case "slack":
+        return "슬랙 알림 전송 중 오류가 발생했습니다.";
+      case "upload":
+        return "녹음 파일 처리 중 오류가 발생했습니다. 다시 녹음해주세요.";
+      default:
+        return "처리 중 오류가 발생했습니다.";
+    }
+  };
+
   const getFormatEmoji = (format: string) => {
     switch (format) {
       case "meeting":
@@ -301,28 +324,19 @@ export function HistoryClient({ initialRecordings }: HistoryClientProps) {
                     )}
 
                     {/* Error Message */}
-                    {recording.status === "failed" && recording.error_message && (
+                    {recording.status === "failed" && (
                       <div className="mt-3 p-2 bg-red-50 border border-red-100 rounded-lg">
-                        <div className="flex items-start gap-1 text-xs text-red-700">
-                          <span className="font-semibold">⚠️</span>
-                          {recording.error_step && (
-                            <span>({getErrorStepText(recording.error_step)})</span>
-                          )}
-                        </div>
-                        <p className="text-xs text-red-600 mt-1 line-clamp-2">
-                          {recording.error_message}
+                        <p className="text-xs text-red-600">
+                          {getUserFriendlyErrorMessage(recording.error_step, recording.error_message)}
                         </p>
                       </div>
                     )}
 
                     {/* Completed - Notion error message (저장 실패한 경우) */}
-                    {recording.status === "completed" && recording.error_step === "notion" && recording.error_message && (
+                    {recording.status === "completed" && recording.error_step === "notion" && (
                       <div className="mt-3 p-2 bg-amber-50 border border-amber-100 rounded-lg">
-                        <div className="flex items-start gap-1 text-xs text-amber-700">
-                          <span className="font-semibold">⚠️ 저장 실패</span>
-                        </div>
-                        <p className="text-xs text-amber-600 mt-1">
-                          {recording.error_message}
+                        <p className="text-xs text-amber-600">
+                          {getUserFriendlyErrorMessage(recording.error_step, recording.error_message)}
                         </p>
                       </div>
                     )}

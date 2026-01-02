@@ -31,6 +31,18 @@ export default function DashboardPage() {
   }, []);
 
   const handleRecordingComplete = async (blob: Blob, duration: number) => {
+    // 녹음 데이터가 없는 경우 에러 처리
+    if (!blob || blob.size === 0) {
+      alert("녹음 데이터가 없습니다. 다시 녹음해주세요.");
+      return;
+    }
+
+    // 너무 짧은 녹음 (1초 미만) 경고
+    if (duration < 1) {
+      alert("녹음 시간이 너무 짧습니다. 다시 녹음해주세요.");
+      return;
+    }
+
     setIsUploading(true);
 
     try {

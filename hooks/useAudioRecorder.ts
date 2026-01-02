@@ -250,11 +250,20 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
 
       const mediaRecorder = mediaRecorderRef.current;
 
+      // Clear timer first
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+
+      // Release wake lock
+      releaseWakeLock();
+
       mediaRecorder.onstop = () => {
         const mimeType = mimeTypeRef.current || "audio/webm";
         const blob = new Blob(chunksRef.current, { type: mimeType });
 
-        console.log("[Recorder] Recording stopped, blob size:", blob.size, "type:", mimeType);
+        console.log("[Recorder] Recording stopped, chunks:", chunksRef.current.length, "blob size:", blob.size, "type:", mimeType);
 
         // Stop all tracks
         if (streamRef.current) {
@@ -269,20 +278,35 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
           setAnalyserNode(null);
         }
 
+        // Check if blob is valid
+        if (blob.size === 0) {
+          console.error("[Recorder] Warning: Generated blob is empty!");
+        }
+
         resolve(blob);
       };
 
-      // Clear timer
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
+      // If paused, resume first to ensure we can request data
+      if (mediaRecorder.state === "paused") {
+        mediaRecorder.resume();
       }
 
-      // Release wake lock
-      releaseWakeLock();
+      // Request any remaining data before stopping
+      // This ensures all buffered audio data is flushed
+      if (mediaRecorder.state === "recording") {
+        try {
+          mediaRecorder.requestData();
+        } catch (e) {
+          console.warn("[Recorder] requestData not supported:", e);
+        }
+      }
 
-      // Stop the media recorder
-      mediaRecorder.stop();
+      // Small delay to allow requestData to complete before stopping
+      setTimeout(() => {
+        if (mediaRecorder.state !== "inactive") {
+          mediaRecorder.stop();
+        }
+      }, 100);
 
       // Reset state
       setIsRecording(false);
