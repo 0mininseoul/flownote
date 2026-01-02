@@ -1,10 +1,9 @@
 // Service Worker for Flownote PWA
-// v3: Improved session persistence for PWA auto-login
+// v4: PWA auto-login improvements with manifest changes
 
-const CACHE_NAME = 'flownote-v3';
-// Only cache static pages, not protected routes
+const CACHE_NAME = 'flownote-v4';
+// Only cache static assets, not routes that require auth
 const urlsToCache = [
-  '/',
   '/manifest.json'
 ];
 

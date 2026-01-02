@@ -527,7 +527,7 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
                             )}
 
                             {/* 데이터베이스 섹션 */}
-                            {filteredDatabases.length > 0 && (
+                            {filteredDatabases.length > 0 ? (
                               <div>
                                 <div className="px-3 py-1.5 text-xs font-medium text-slate-400 bg-slate-50">
                                   데이터베이스 (새 아이템으로 추가)
@@ -543,7 +543,7 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
                                   </button>
                                 ))}
                               </div>
-                            )}
+                            ) : null}
 
                             {/* 페이지 섹션 */}
                             {filteredPages.length > 0 && (
