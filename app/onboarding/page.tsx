@@ -3,16 +3,15 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
-import { PWAInstallPrompt } from "@/components/pwa/install-prompt";
 
-type OnboardingStep = 1 | 2 | 3;
+type OnboardingStep = 1 | 2;
 
 function OnboardingContent() {
   const [step, setStep] = useState<OnboardingStep>(1);
   const router = useRouter();
   const { t } = useI18n();
 
-  // Step 2에 진입하면 온보딩 완료 처리 (PWA 설치 후 재로그인 시 온보딩 반복 방지)
+  // Step 2에 진입하면 온보딩 완료 처리
   useEffect(() => {
     if (step === 2) {
       markOnboardingComplete();
@@ -29,12 +28,8 @@ function OnboardingContent() {
     }
   };
 
-  const handlePWAComplete = () => {
+  const handleComplete = () => {
     router.push("/dashboard");
-  };
-
-  const handleGoToSettings = () => {
-    router.push("/settings");
   };
 
   return (
@@ -43,7 +38,7 @@ function OnboardingContent() {
         <div className="w-full max-w-sm space-y-3 flex-1 flex flex-col">
           {/* Progress Indicator */}
           <div className="flex items-center justify-center gap-2">
-            {[1, 2, 3].map((num) => (
+            {[1, 2].map((num) => (
               <div key={num} className="flex items-center">
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${
@@ -54,7 +49,7 @@ function OnboardingContent() {
                 >
                   {num}
                 </div>
-                {num < 3 && (
+                {num < 2 && (
                   <div
                     className={`w-8 h-0.5 mx-1 rounded-full transition-all duration-300 ${
                       step > num ? "bg-slate-900" : "bg-slate-200"
@@ -178,17 +173,13 @@ function OnboardingContent() {
                     {t.common.back}
                   </button>
                   <button
-                    onClick={() => setStep(3)}
+                    onClick={handleComplete}
                     className="flex-1 btn-primary"
                   >
-                    {t.common.next}
+                    시작하기
                   </button>
                 </div>
               </div>
-            )}
-
-            {step === 3 && (
-              <PWAInstallPrompt onComplete={handlePWAComplete} />
             )}
           </div>
         </div>

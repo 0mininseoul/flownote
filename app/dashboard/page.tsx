@@ -7,6 +7,7 @@ import { AudioRecorder } from "@/components/recorder/audio-recorder";
 import { getFileExtension } from "@/hooks/useAudioRecorder";
 import { BottomTab } from "@/components/navigation/bottom-tab";
 import { useI18n } from "@/lib/i18n";
+import { DashboardPWAInstallModal } from "@/components/pwa/dashboard-install-modal";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function DashboardPage() {
   const [googleConnected, setGoogleConnected] = useState(true);
   const [showNotionGoogleWarning, setShowNotionGoogleWarning] = useState(true);
   const [showSlackWarning, setShowSlackWarning] = useState(true);
+  const [showPWAModal, setShowPWAModal] = useState(false);
 
   useEffect(() => {
     const fetchConnectionStatus = async () => {
@@ -33,6 +35,37 @@ export default function DashboardPage() {
       }
     };
     fetchConnectionStatus();
+
+    // PWA 설치 모달 표시 조건 체크
+    const checkPWAModal = () => {
+      // 이미 Standalone 모드인 경우 표시하지 않음
+      if (window.matchMedia("(display-mode: standalone)").matches) {
+        return;
+      }
+      if ((navigator as any).standalone === true) {
+        return;
+      }
+
+      // 24시간 내에 dismiss한 경우 표시하지 않음
+      const dismissedTime = localStorage.getItem("pwa_install_dismissed");
+      if (dismissedTime) {
+        const dismissed = parseInt(dismissedTime, 10);
+        const now = Date.now();
+        const twentyFourHours = 24 * 60 * 60 * 1000;
+        if (now - dismissed < twentyFourHours) {
+          return;
+        }
+      }
+
+      // 최초 방문인 경우 표시
+      const hasSeenPWAModal = localStorage.getItem("pwa_modal_seen");
+      if (!hasSeenPWAModal) {
+        setShowPWAModal(true);
+        localStorage.setItem("pwa_modal_seen", "true");
+      }
+    };
+
+    checkPWAModal();
   }, []);
 
   const handleRecordingComplete = async (blob: Blob, duration: number) => {
@@ -180,6 +213,11 @@ export default function DashboardPage() {
 
       {/* Bottom Tab Navigation */}
       <BottomTab />
+
+      {/* PWA Install Modal */}
+      {showPWAModal && (
+        <DashboardPWAInstallModal onClose={() => setShowPWAModal(false)} />
+      )}
     </div>
   );
 }
