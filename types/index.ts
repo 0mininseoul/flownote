@@ -26,6 +26,7 @@ export interface Recording {
   transcript?: string;
   formatted_content?: string;
   notion_page_url?: string;
+  google_doc_url?: string;
   error_message?: string;
   error_step?: ErrorStep;
   is_hidden?: boolean;

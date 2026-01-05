@@ -38,6 +38,13 @@ export default function DashboardPage() {
 
     // PWA 설치 모달 표시 조건 체크
     const checkPWAModal = () => {
+      // 모바일 디바이스가 아닌 경우 표시하지 않음 (PC 제외)
+      const ua = navigator.userAgent;
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
+      if (!isMobile) {
+        return;
+      }
+
       // 이미 Standalone 모드인 경우 표시하지 않음
       if (window.matchMedia("(display-mode: standalone)").matches) {
         return;
