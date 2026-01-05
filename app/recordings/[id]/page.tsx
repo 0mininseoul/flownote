@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
+import Image from "next/image";
 import { Recording } from "@/types";
 import { formatDurationMinutes } from "@/lib/utils";
 
@@ -126,9 +127,13 @@ export default function RecordingDetailPage() {
               </svg>
             </button>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center text-white font-bold">
-                F
-              </div>
+              <Image
+                src="/icons/flownote logo.png"
+                alt="Flownote"
+                width={32}
+                height={32}
+                className="rounded-lg"
+              />
               <span className="text-xl font-bold text-slate-900">Flownote</span>
             </div>
           </div>

@@ -17,7 +17,7 @@ export async function GET() {
     // Get user data
     const { data: userData, error } = await supabase
       .from("users")
-      .select("notion_access_token, slack_access_token")
+      .select("notion_access_token, slack_access_token, google_access_token")
       .eq("id", user.id)
       .single();
 
@@ -32,6 +32,7 @@ export async function GET() {
     return NextResponse.json({
       notionConnected: !!userData?.notion_access_token,
       slackConnected: !!userData?.slack_access_token,
+      googleConnected: !!userData?.google_access_token,
     });
   } catch (error) {
     console.error("API error:", error);

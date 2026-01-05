@@ -106,6 +106,7 @@ export const translations = {
       wakeLockInactive: "화면 유지 기능을 사용할 수 없습니다",
       notionNotConnected: "Notion이 연결되지 않았습니다. 녹음 내용이 Notion에 저장되지 않습니다.",
       slackNotConnected: "Slack이 연결되지 않았습니다. 완료 알림이 발송되지 않습니다.",
+      notionAndGoogleNotConnected: "Notion과 Google이 모두 연결되지 않았습니다. 녹음 내용이 저장되지 않습니다.",
     },
 
     // History
