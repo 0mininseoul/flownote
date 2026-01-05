@@ -4,6 +4,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { RegisterServiceWorker } from "./register-sw";
 import { I18nProvider, Locale } from "@/lib/i18n";
+import AmplitudeAnalytics from "@/components/AmplitudeAnalytics";
 
 export const metadata: Metadata = {
   title: "Flownote - 자동 음성 문서화 서비스",
@@ -75,6 +76,7 @@ export default async function RootLayout({
       <body className="font-sans antialiased">
         <I18nProvider initialLocale={initialLocale}>
           <RegisterServiceWorker />
+          <AmplitudeAnalytics />
           {children}
           <SpeedInsights />
         </I18nProvider>
