@@ -38,9 +38,9 @@ function OnboardingContent() {
   };
 
   return (
-    <div className="app-container">
-      <main className="min-h-screen flex flex-col items-center justify-start py-6 px-4 overflow-y-auto">
-        <div className="w-full max-w-sm space-y-4 my-auto">
+    <div className="app-container !overflow-y-auto">
+      <main className="flex-1 flex flex-col items-center px-4 py-4">
+        <div className="w-full max-w-sm space-y-3 flex-1 flex flex-col">
           {/* Progress Indicator */}
           <div className="flex items-center justify-center gap-2">
             {[1, 2, 3].map((num) => (
@@ -66,9 +66,9 @@ function OnboardingContent() {
           </div>
 
           {/* Step Content */}
-          <div className="card p-5 animate-slide-up">
+          <div className="card p-5 animate-slide-up flex-1 flex flex-col">
             {step === 1 && (
-              <div className="space-y-6 text-center">
+              <div className="space-y-5 text-center flex-1 flex flex-col justify-center">
                 <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-2xl mx-auto">
                   👋
                 </div>
@@ -93,30 +93,30 @@ function OnboardingContent() {
             )}
 
             {step === 2 && (
-              <div className="space-y-4">
-                <div className="text-center space-y-1">
-                  <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-xl mx-auto">
+              <div className="flex-1 flex flex-col">
+                <div className="text-center mb-3">
+                  <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-lg mx-auto mb-1">
                     ✨
                   </div>
-                  <h2 className="text-lg font-bold text-slate-900">
+                  <h2 className="text-base font-bold text-slate-900">
                     {t.onboarding.step2.title}
                   </h2>
-                  <p className="text-xs text-slate-600">
+                  <p className="text-xs text-slate-600 mt-0.5">
                     {t.onboarding.step2.description}
                   </p>
                 </div>
 
                 {/* Feature Cards */}
-                <div className="space-y-2">
+                <div className="space-y-1.5 flex-1">
                   {/* Auto Format Detection */}
-                  <div className="border border-slate-200 rounded-lg p-3">
-                    <div className="flex items-start gap-2.5">
-                      <div className="w-9 h-9 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
+                  <div className="border border-slate-200 rounded-lg p-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center text-base flex-shrink-0">
                         🎯
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-slate-900 text-sm">{t.onboarding.step2.autoFormat.title}</h3>
-                        <p className="text-xs text-slate-500 mt-0.5 leading-tight">
+                        <p className="text-[11px] text-slate-500 leading-tight">
                           {t.onboarding.step2.autoFormat.description}
                         </p>
                       </div>
@@ -124,49 +124,49 @@ function OnboardingContent() {
                   </div>
 
                   {/* Integrations */}
-                  <div className="border border-slate-200 rounded-lg p-3">
-                    <div className="flex items-start gap-2.5">
-                      <div className="w-9 h-9 bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
+                  <div className="border border-slate-200 rounded-lg p-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg flex items-center justify-center text-base flex-shrink-0">
                         🔗
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-slate-900 text-sm">{t.onboarding.step2.integrations.title}</h3>
-                        <p className="text-xs text-slate-500 mt-0.5 leading-tight">
+                        <p className="text-[11px] text-slate-500 leading-tight">
                           {t.onboarding.step2.integrations.description}
                         </p>
-                        <div className="flex flex-wrap gap-1 mt-1.5">
-                          <span className="px-1.5 py-0.5 bg-slate-100 rounded-full text-[10px] text-slate-600">📔 Notion</span>
-                          <span className="px-1.5 py-0.5 bg-slate-100 rounded-full text-[10px] text-slate-600">📄 Google Docs</span>
-                          <span className="px-1.5 py-0.5 bg-slate-100 rounded-full text-[10px] text-slate-600">💬 Slack</span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          <span className="px-1.5 py-0.5 bg-slate-100 rounded-full text-[10px] text-slate-600">Notion</span>
+                          <span className="px-1.5 py-0.5 bg-slate-100 rounded-full text-[10px] text-slate-600">Google Docs</span>
+                          <span className="px-1.5 py-0.5 bg-slate-100 rounded-full text-[10px] text-slate-600">Slack</span>
                         </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Custom Formats */}
-                  <div className="border border-slate-200 rounded-lg p-3">
-                    <div className="flex items-start gap-2.5">
-                      <div className="w-9 h-9 bg-gradient-to-br from-orange-100 to-amber-100 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
+                  <div className="border border-slate-200 rounded-lg p-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-gradient-to-br from-orange-100 to-amber-100 rounded-lg flex items-center justify-center text-base flex-shrink-0">
                         📝
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-slate-900 text-sm">{t.onboarding.step2.customFormat.title}</h3>
-                        <p className="text-xs text-slate-500 mt-0.5 leading-tight">
+                        <p className="text-[11px] text-slate-500 leading-tight">
                           {t.onboarding.step2.customFormat.description}
                         </p>
                       </div>
                     </div>
                   </div>
+
+                  {/* Settings Guide */}
+                  <div className="p-2 bg-blue-50 border border-blue-100 rounded-lg">
+                    <p className="text-[11px] text-blue-700 leading-tight">
+                      <strong>💡</strong> {t.onboarding.step2.settingsTip}
+                    </p>
+                  </div>
                 </div>
 
-                {/* Settings Guide */}
-                <div className="p-2.5 bg-blue-50 border border-blue-100 rounded-lg">
-                  <p className="text-[11px] text-blue-700 leading-tight">
-                    <strong>💡 Tip:</strong> {t.onboarding.step2.settingsTip}
-                  </p>
-                </div>
-
-                <div className="flex gap-3 pt-1">
+                <div className="flex gap-3 mt-3">
                   <button
                     onClick={() => setStep(1)}
                     className="py-2.5 px-4 text-slate-500 font-medium text-sm min-h-[44px]"

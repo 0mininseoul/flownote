@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useI18n } from "@/lib/i18n";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -11,7 +10,6 @@ interface BeforeInstallPromptEvent extends Event {
 type DeviceType = "android" | "ios-safari" | "ios-chrome" | "desktop" | "standalone";
 
 export function PWAInstallPrompt({ onComplete }: { onComplete: () => void }) {
-  const { t } = useI18n();
   const [deviceType, setDeviceType] = useState<DeviceType>("desktop");
   const [showModal, setShowModal] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -98,17 +96,17 @@ export function PWAInstallPrompt({ onComplete }: { onComplete: () => void }) {
   // Standalone이거나 표시할 필요 없으면 아무것도 렌더링하지 않음
   if (deviceType === "standalone" || !showModal) {
     return (
-      <div className="space-y-6 text-center">
-        <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center text-3xl mx-auto">
+      <div className="flex-1 flex flex-col justify-center text-center space-y-4">
+        <div className="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center text-2xl mx-auto">
           ✅
         </div>
-        <div className="space-y-2">
-          <h2 className="text-xl font-bold text-slate-900">모든 설정이 완료되었습니다!</h2>
+        <div className="space-y-1">
+          <h2 className="text-lg font-bold text-slate-900">모든 설정이 완료되었습니다!</h2>
           <p className="text-sm text-slate-600">이제 Flownote를 사용할 준비가 되었습니다.</p>
         </div>
         <button
           onClick={onComplete}
-          className="btn-primary w-full"
+          className="btn-primary w-full mt-2"
         >
           시작하기
         </button>
@@ -119,20 +117,18 @@ export function PWAInstallPrompt({ onComplete }: { onComplete: () => void }) {
   // Android - 네이티브 설치 프롬프트
   if (deviceType === "android") {
     return (
-      <div className="space-y-6 text-center">
-        <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-3xl mx-auto">
+      <div className="flex-1 flex flex-col text-center">
+        <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-2xl mx-auto mb-2">
           📱
         </div>
-        <div className="space-y-2">
-          <h2 className="text-xl font-bold text-slate-900">홈 화면에 추가하기</h2>
-          <p className="text-sm text-slate-600">
-            앱처럼 빠르게 접근하고 더 안정적으로 사용할 수 있습니다.
-          </p>
-        </div>
+        <h2 className="text-base font-bold text-slate-900">홈 화면에 추가하기</h2>
+        <p className="text-xs text-slate-600 mt-1">
+          앱처럼 빠르게 접근하고 더 안정적으로 사용할 수 있습니다.
+        </p>
 
         {/* Benefits */}
-        <div className="p-3 bg-green-50 border border-green-100 rounded-xl text-left">
-          <div className="space-y-2 text-xs text-green-700">
+        <div className="p-2.5 bg-green-50 border border-green-100 rounded-lg text-left mt-3">
+          <div className="space-y-1.5 text-xs text-green-700">
             <div className="flex items-center gap-2">
               <span>✓</span>
               <span>앱처럼 빠르게 실행</span>
@@ -148,6 +144,8 @@ export function PWAInstallPrompt({ onComplete }: { onComplete: () => void }) {
           </div>
         </div>
 
+        <div className="flex-1" />
+
         {deferredPrompt ? (
           <button
             onClick={handleInstallClick}
@@ -156,14 +154,14 @@ export function PWAInstallPrompt({ onComplete }: { onComplete: () => void }) {
             홈 화면에 추가
           </button>
         ) : (
-          <div className="p-4 bg-slate-50 rounded-xl text-sm text-slate-600">
+          <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
             <p>브라우저 메뉴에서 &quot;홈 화면에 추가&quot;를 선택하세요.</p>
           </div>
         )}
 
         <button
           onClick={handleSkip}
-          className="text-sm text-slate-500 font-medium"
+          className="text-sm text-slate-500 font-medium mt-3 min-h-[44px]"
         >
           나중에
         </button>
@@ -174,78 +172,59 @@ export function PWAInstallPrompt({ onComplete }: { onComplete: () => void }) {
   // iOS Safari - 하단 공유 버튼 가이드
   if (deviceType === "ios-safari") {
     return (
-      <div className="space-y-6">
-        <div className="text-center space-y-2">
-          <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-3xl mx-auto">
+      <div className="flex-1 flex flex-col">
+        <div className="text-center mb-2">
+          <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-lg mx-auto mb-1">
             📱
           </div>
-          <h2 className="text-xl font-bold text-slate-900">홈 화면에 추가하기</h2>
-          <p className="text-sm text-slate-600">
-            앱처럼 빠르게 접근하고 더 안정적으로 사용할 수 있습니다.
+          <h2 className="text-base font-bold text-slate-900">홈 화면에 추가하기</h2>
+          <p className="text-xs text-slate-600 mt-0.5">
+            앱처럼 빠르게 접근할 수 있습니다.
           </p>
         </div>
 
-        {/* Benefits */}
-        <div className="p-3 bg-green-50 border border-green-100 rounded-xl">
-          <div className="space-y-2 text-xs text-green-700">
-            <div className="flex items-center gap-2">
-              <span>✓</span>
-              <span>앱처럼 빠르게 실행</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span>✓</span>
-              <span>서비스 연동이 더 안정적으로 작동</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span>✓</span>
-              <span>전체 화면으로 편리하게 사용</span>
-            </div>
-          </div>
-        </div>
-
         {/* iOS Safari 가이드 */}
-        <div className="bg-slate-50 rounded-xl p-4 space-y-4">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-lg font-bold text-slate-900 border border-slate-200 flex-shrink-0">
+        <div className="bg-slate-50 rounded-lg p-3 space-y-3 flex-1">
+          <div className="flex items-start gap-2.5">
+            <div className="w-6 h-6 bg-white rounded flex items-center justify-center text-sm font-bold text-slate-900 border border-slate-200 flex-shrink-0">
               1
             </div>
             <div className="flex-1">
-              <p className="text-sm text-slate-700 font-medium">
+              <p className="text-xs text-slate-700 font-medium">
                 화면 하단의 공유 버튼을 탭하세요
               </p>
-              <div className="mt-2 flex justify-center">
-                {/* iOS Share Icon */}
-                <div className="p-2 bg-blue-500 rounded-lg animate-bounce-arrow">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              <div className="mt-1.5 flex justify-center">
+                <div className="p-1.5 bg-blue-500 rounded-lg animate-bounce-arrow">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                   </svg>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-lg font-bold text-slate-900 border border-slate-200 flex-shrink-0">
+          <div className="flex items-start gap-2.5">
+            <div className="w-6 h-6 bg-white rounded flex items-center justify-center text-sm font-bold text-slate-900 border border-slate-200 flex-shrink-0">
               2
             </div>
             <div className="flex-1">
-              <p className="text-sm text-slate-700 font-medium">
-                "홈 화면에 추가"를 선택하세요
+              <p className="text-xs text-slate-700 font-medium">
+                &quot;홈 화면에 추가&quot;를 선택하세요
               </p>
-              <div className="mt-2 p-2 bg-white rounded-lg border border-slate-200 inline-flex items-center gap-2">
-                <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="mt-1.5 p-1.5 bg-white rounded border border-slate-200 inline-flex items-center gap-1.5">
+                <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                <span className="text-sm text-slate-700">홈 화면에 추가</span>
+                <span className="text-xs text-slate-700">홈 화면에 추가</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 mt-3">
           <button
             onClick={handleDismiss}
-            className="flex-1 py-3 px-4 text-slate-500 font-medium text-sm"
+            className="flex-1 py-2.5 px-4 text-slate-500 font-medium text-sm min-h-[44px]"
           >
             나중에
           </button>
@@ -263,49 +242,30 @@ export function PWAInstallPrompt({ onComplete }: { onComplete: () => void }) {
   // iOS Chrome/기타 브라우저 - 상단 우측 공유 버튼 가이드
   if (deviceType === "ios-chrome") {
     return (
-      <div className="space-y-6">
-        <div className="text-center space-y-2">
-          <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-3xl mx-auto">
+      <div className="flex-1 flex flex-col">
+        <div className="text-center mb-2">
+          <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-lg mx-auto mb-1">
             📱
           </div>
-          <h2 className="text-xl font-bold text-slate-900">홈 화면에 추가하기</h2>
-          <p className="text-sm text-slate-600">
-            앱처럼 빠르게 접근하고 더 안정적으로 사용할 수 있습니다.
+          <h2 className="text-base font-bold text-slate-900">홈 화면에 추가하기</h2>
+          <p className="text-xs text-slate-600 mt-0.5">
+            앱처럼 빠르게 접근할 수 있습니다.
           </p>
         </div>
 
-        {/* Benefits */}
-        <div className="p-3 bg-green-50 border border-green-100 rounded-xl">
-          <div className="space-y-2 text-xs text-green-700">
-            <div className="flex items-center gap-2">
-              <span>✓</span>
-              <span>앱처럼 빠르게 실행</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span>✓</span>
-              <span>서비스 연동이 더 안정적으로 작동</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span>✓</span>
-              <span>전체 화면으로 편리하게 사용</span>
-            </div>
-          </div>
-        </div>
-
         {/* iOS Chrome 가이드 */}
-        <div className="bg-slate-50 rounded-xl p-4 space-y-4">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-lg font-bold text-slate-900 border border-slate-200 flex-shrink-0">
+        <div className="bg-slate-50 rounded-lg p-3 space-y-3 flex-1">
+          <div className="flex items-start gap-2.5">
+            <div className="w-6 h-6 bg-white rounded flex items-center justify-center text-sm font-bold text-slate-900 border border-slate-200 flex-shrink-0">
               1
             </div>
             <div className="flex-1">
-              <p className="text-sm text-slate-700 font-medium">
+              <p className="text-xs text-slate-700 font-medium">
                 화면 상단 우측의 공유 버튼을 탭하세요
               </p>
-              <div className="mt-2 flex justify-end">
-                {/* Top right arrow indicator */}
-                <div className="p-2 bg-blue-500 rounded-lg animate-bounce-arrow">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="mt-1.5 flex justify-end">
+                <div className="p-1.5 bg-blue-500 rounded-lg animate-bounce-arrow">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                   </svg>
                 </div>
@@ -313,34 +273,34 @@ export function PWAInstallPrompt({ onComplete }: { onComplete: () => void }) {
             </div>
           </div>
 
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-lg font-bold text-slate-900 border border-slate-200 flex-shrink-0">
+          <div className="flex items-start gap-2.5">
+            <div className="w-6 h-6 bg-white rounded flex items-center justify-center text-sm font-bold text-slate-900 border border-slate-200 flex-shrink-0">
               2
             </div>
             <div className="flex-1">
-              <p className="text-sm text-slate-700 font-medium">
-                "홈 화면에 추가"를 선택하세요
+              <p className="text-xs text-slate-700 font-medium">
+                &quot;홈 화면에 추가&quot;를 선택하세요
               </p>
-              <div className="mt-2 p-2 bg-white rounded-lg border border-slate-200 inline-flex items-center gap-2">
-                <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="mt-1.5 p-1.5 bg-white rounded border border-slate-200 inline-flex items-center gap-1.5">
+                <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                <span className="text-sm text-slate-700">홈 화면에 추가</span>
+                <span className="text-xs text-slate-700">홈 화면에 추가</span>
               </div>
             </div>
           </div>
 
-          <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg">
-            <p className="text-xs text-blue-700">
+          <div className="p-2 bg-blue-50 border border-blue-100 rounded">
+            <p className="text-[11px] text-blue-700">
               <strong>Tip:</strong> Safari에서 열면 더 쉽게 추가할 수 있습니다!
             </p>
           </div>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 mt-3">
           <button
             onClick={handleDismiss}
-            className="flex-1 py-3 px-4 text-slate-500 font-medium text-sm"
+            className="flex-1 py-2.5 px-4 text-slate-500 font-medium text-sm min-h-[44px]"
           >
             나중에
           </button>
@@ -357,19 +317,19 @@ export function PWAInstallPrompt({ onComplete }: { onComplete: () => void }) {
 
   // Desktop - 기본 안내
   return (
-    <div className="space-y-6 text-center">
-      <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-3xl mx-auto">
+    <div className="flex-1 flex flex-col justify-center text-center space-y-4">
+      <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-2xl mx-auto">
         💻
       </div>
-      <div className="space-y-2">
-        <h2 className="text-xl font-bold text-slate-900">모바일에서 더 편리하게!</h2>
+      <div className="space-y-1">
+        <h2 className="text-lg font-bold text-slate-900">모바일에서 더 편리하게!</h2>
         <p className="text-sm text-slate-600">
           스마트폰에서 Flownote를 열어 홈 화면에 추가하면 앱처럼 사용할 수 있습니다.
         </p>
       </div>
       <button
         onClick={handleSkip}
-        className="btn-primary w-full"
+        className="btn-primary w-full mt-2"
       >
         시작하기
       </button>
