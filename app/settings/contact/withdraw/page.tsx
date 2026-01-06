@@ -8,6 +8,7 @@ export default function WithdrawPage() {
   const router = useRouter();
   const { t } = useI18n();
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedReason, setSelectedReason] = useState<string>("");
 
   const handleWithdraw = async () => {
     setIsLoading(true);
@@ -15,6 +16,12 @@ export default function WithdrawPage() {
       // 모든 데이터 삭제 후 계정 삭제
       const response = await fetch("/api/user/withdraw", {
         method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          reason: selectedReason || null,
+        }),
       });
 
       if (response.ok) {
@@ -74,6 +81,43 @@ export default function WithdrawPage() {
                 </li>
               ))}
             </ul>
+          </div>
+
+          {/* Withdrawal Reason Selection */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-slate-700">
+              {t.settings.withdrawPage.reasonLabel}
+            </label>
+            <select
+              value={selectedReason}
+              onChange={(e) => setSelectedReason(e.target.value)}
+              className="w-full py-3 px-4 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">
+                {t.settings.withdrawPage.reasonPlaceholder}
+              </option>
+              <option value={t.settings.withdrawPage.reasons.noLongerNeeded}>
+                {t.settings.withdrawPage.reasons.noLongerNeeded}
+              </option>
+              <option value={t.settings.withdrawPage.reasons.switchingService}>
+                {t.settings.withdrawPage.reasons.switchingService}
+              </option>
+              <option value={t.settings.withdrawPage.reasons.lackingFeatures}>
+                {t.settings.withdrawPage.reasons.lackingFeatures}
+              </option>
+              <option value={t.settings.withdrawPage.reasons.difficultToUse}>
+                {t.settings.withdrawPage.reasons.difficultToUse}
+              </option>
+              <option value={t.settings.withdrawPage.reasons.privacyConcerns}>
+                {t.settings.withdrawPage.reasons.privacyConcerns}
+              </option>
+              <option value={t.settings.withdrawPage.reasons.tooExpensive}>
+                {t.settings.withdrawPage.reasons.tooExpensive}
+              </option>
+              <option value={t.settings.withdrawPage.reasons.other}>
+                {t.settings.withdrawPage.reasons.other}
+              </option>
+            </select>
           </div>
 
           {/* Buttons */}

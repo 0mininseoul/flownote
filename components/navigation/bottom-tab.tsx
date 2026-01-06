@@ -60,10 +60,10 @@ export function BottomTab({ showSettingsTooltip = false }: BottomTabProps) {
           <div key={tab.id} className="relative">
             {/* Settings tooltip */}
             {tab.id === "settings" && showSettingsTooltip && (
-              <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 whitespace-nowrap z-10 animate-bounce-slow">
-                <div className="bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg">
+              <div className="absolute -top-12 right-0 z-10 animate-bounce-slow max-w-[160px] sm:max-w-[200px]">
+                <div className="bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg text-center">
                   {t.nav.settingsTooltip}
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-indigo-600" />
+                  <div className="absolute top-full right-4 border-4 border-transparent border-t-indigo-600" />
                 </div>
               </div>
             )}
