@@ -90,6 +90,7 @@ export async function DELETE(request: Request) {
         language: userData.language || "ko",
         referred_users_count: referredUsersCount || 0,
         was_referred: !!userData.referred_by,
+        user_data: userData, // Store full user data snapshot
       });
 
     if (archiveError) {
@@ -120,7 +121,8 @@ export async function DELETE(request: Request) {
       console.error("Failed to delete custom formats:", formatsError);
     }
 
-    // 9. Delete user data from users table
+    // 9. Delete user data from public.users table
+    // Note: We do this before deleting from auth to ensure clean public data removal
     const { error: userError } = await supabase
       .from("users")
       .delete()
@@ -132,6 +134,19 @@ export async function DELETE(request: Request) {
         { error: "Failed to delete user data" },
         { status: 500 }
       );
+    }
+
+    // 10. Delete user from Supabase Auth (Hard Delete)
+    // This allows the user to sign up again as a completely new user
+    const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(
+      user.id
+    );
+
+    if (authDeleteError) {
+      console.error("Failed to delete user from Auth:", authDeleteError);
+      // We don't return error here because public data is already deleted,
+      // so from the user's perspective, the account is gone.
+      // However, they might have trouble re-signing up if this fails.
     }
 
     // 10. Return success (sign out will be handled by frontend)
