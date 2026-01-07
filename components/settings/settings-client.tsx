@@ -114,6 +114,9 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
   const [pushLoading, setPushLoading] = useState(false);
   const [pushError, setPushError] = useState<string | null>(null);
 
+  // UI State
+  const [openSection, setOpenSection] = useState<string | null>(null);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const isNotionJustConnected = params.get("notion") === "connected";
@@ -138,6 +141,18 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
       setPushSupported(true);
     }
   }, []);
+
+  // Auto-request permission if enabled on server but not granted locally
+  useEffect(() => {
+    if (pushEnabled && pushSupported && Notification.permission === "default") {
+      Notification.requestPermission().then((permission) => {
+        if (permission !== "granted") {
+          setPushEnabled(false);
+          handleTogglePush(false);
+        }
+      });
+    }
+  }, [pushEnabled, pushSupported]);
 
   const refreshData = async () => {
     try {
@@ -178,6 +193,9 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
   };
 
   const handleTogglePush = async (enable: boolean) => {
+    // Optimistic Update
+    const previousState = pushEnabled;
+    setPushEnabled(enable);
     setPushLoading(true);
     setPushError(null);
 
@@ -187,6 +205,7 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
         const permission = await Notification.requestPermission();
         if (permission !== "granted") {
           setPushError(t.settings.pushNotification.permissionDenied);
+          setPushEnabled(previousState);
           setPushLoading(false);
           return;
         }
@@ -214,7 +233,8 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ enabled: true }),
           });
-          setPushEnabled(true);
+        } else {
+          throw new Error("Failed to save subscription");
         }
       } else {
         // Disable push on server
@@ -223,11 +243,11 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ enabled: false }),
         });
-        setPushEnabled(false);
       }
     } catch (error) {
       console.error("Failed to toggle push notifications:", error);
       setPushError(t.settings.pushNotification.notSupported);
+      setPushEnabled(previousState);
     } finally {
       setPushLoading(false);
     }
@@ -312,7 +332,6 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
     }
   };
 
-  // Google 연결 해제
   const handleDisconnectGoogle = async () => {
     if (!confirm("Google 연결을 해제하시겠습니까?")) return;
 
@@ -330,7 +349,6 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
     }
   };
 
-  // Google 폴더 목록 가져오기
   const fetchGoogleFolders = async () => {
     setGoogleFolderLoading(true);
     try {
@@ -346,7 +364,6 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
     }
   };
 
-  // Google 폴더 선택
   const selectGoogleFolder = async (folderId: string | null, folderName: string | null) => {
     try {
       const response = await fetch("/api/user/google", {
@@ -364,13 +381,11 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
     }
   };
 
-  // Google 폴더 드롭다운 열기
   const openGoogleFolderDropdown = () => {
     setShowGoogleFolderDropdown(true);
     fetchGoogleFolders();
   };
 
-  // 기본 저장 위치 드롭다운 열기
   const openSaveTargetDropdown = async () => {
     setShowSaveTargetDropdown(true);
     setDropdownLoading(true);
@@ -396,7 +411,6 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
     }
   };
 
-  // 저장 위치 선택
   const selectSaveTarget = async (target: NotionSaveTarget) => {
     try {
       const response = await fetch("/api/user/notion-database", {
@@ -420,7 +434,6 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
     }
   };
 
-  // Notion 연결 해제
   const handleDisconnectNotion = async () => {
     if (!confirm("Notion 연결을 해제하시겠습니까?")) return;
 
@@ -439,7 +452,6 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
     }
   };
 
-  // 신규 페이지 생성
   const createNewPage = async (title: string) => {
     if (!title.trim()) return;
 
@@ -465,7 +477,6 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
     }
   };
 
-  // 신규 데이터베이스 생성
   const createNewDatabase = async (title: string) => {
     if (!title.trim()) return;
 
@@ -503,7 +514,6 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
     }
   };
 
-  // 필터링된 결과
   const filteredDatabases = databases.filter(db =>
     db.title.toLowerCase().includes(saveTargetSearch.toLowerCase())
   );
@@ -511,10 +521,9 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
     page.title.toLowerCase().includes(saveTargetSearch.toLowerCase())
   );
 
-  // 검색어가 기존 항목과 일치하는지 확인
   const searchTermMatchesExisting = saveTargetSearch.trim() !== "" &&
     (filteredDatabases.some(db => db.title.toLowerCase() === saveTargetSearch.toLowerCase()) ||
-     filteredPages.some(page => page.title.toLowerCase() === saveTargetSearch.toLowerCase()));
+      filteredPages.some(page => page.title.toLowerCase() === saveTargetSearch.toLowerCase()));
 
   const handleDeleteAllData = async () => {
     const confirmed = confirm(t.settings.data.deleteConfirm);
@@ -551,9 +560,13 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
     }
   };
 
+  const toggleSection = (section: string) => {
+    setOpenSection(openSection === section ? null : section);
+  };
+
   return (
     <div className="space-y-4">
-      {/* Account Info */}
+      {/* 1. Account Info */}
       <div className="card p-4">
         <h2 className="text-base font-bold text-slate-900 mb-3">
           {t.settings.account.title}
@@ -591,10 +604,7 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
         </div>
       </div>
 
-      {/* Invite Friends */}
-      <InviteFriends />
-
-      {/* Integrations */}
+      {/* 2. Integrations */}
       <div className="card p-4">
         <h2 className="text-base font-bold text-slate-900 mb-1">
           {t.settings.integrations.title}
@@ -631,7 +641,6 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
 
             {notionConnected ? (
               <div className="space-y-2">
-                {/* 기본 저장 위치 드롭다운 */}
                 <div className="relative">
                   <button
                     onClick={openSaveTargetDropdown}
@@ -645,10 +654,8 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
                     </svg>
                   </button>
 
-                  {/* 드롭다운 메뉴 */}
                   {showSaveTargetDropdown && (
                     <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 max-h-80 overflow-hidden">
-                      {/* 검색 입력 */}
                       <div className="p-2 border-b border-slate-100">
                         <input
                           type="text"
@@ -667,7 +674,6 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
                           </div>
                         ) : (
                           <>
-                            {/* 신규 생성 버튼 */}
                             {saveTargetSearch.trim() && !searchTermMatchesExisting && (
                               <div className="border-b border-slate-100">
                                 <div className="px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50">
@@ -690,7 +696,6 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
                               </div>
                             )}
 
-                            {/* 데이터베이스 섹션 */}
                             {filteredDatabases.length > 0 ? (
                               <div>
                                 <div className="px-3 py-1.5 text-xs font-medium text-slate-400 bg-slate-50">
@@ -709,7 +714,6 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
                               </div>
                             ) : null}
 
-                            {/* 페이지 섹션 */}
                             {filteredPages.length > 0 && (
                               <div>
                                 <div className="px-3 py-1.5 text-xs font-medium text-slate-400 bg-slate-50">
@@ -737,7 +741,6 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
                         )}
                       </div>
 
-                      {/* 닫기 버튼 */}
                       <div className="p-2 border-t border-slate-100">
                         <button
                           onClick={() => {
@@ -791,7 +794,6 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
 
             {googleConnected ? (
               <div className="space-y-2">
-                {/* Google 폴더 선택 드롭다운 */}
                 <div className="relative">
                   <button
                     onClick={openGoogleFolderDropdown}
@@ -805,7 +807,6 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
                     </svg>
                   </button>
 
-                  {/* 드롭다운 메뉴 */}
                   {showGoogleFolderDropdown && (
                     <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 max-h-64 overflow-hidden">
                       <div className="overflow-y-auto max-h-52">
@@ -815,7 +816,6 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
                           </div>
                         ) : (
                           <>
-                            {/* 루트 폴더 (내 드라이브) */}
                             <button
                               onClick={() => selectGoogleFolder(null, null)}
                               className="w-full px-3 py-2.5 text-left text-sm hover:bg-slate-50 flex items-center gap-2 min-h-[44px] border-b border-slate-100"
@@ -824,7 +824,6 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
                               <span>{t.settings.integrations.google.rootFolder}</span>
                             </button>
 
-                            {/* 폴더 목록 */}
                             {googleFolders.map((folder) => (
                               <button
                                 key={folder.id}
@@ -845,7 +844,6 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
                         )}
                       </div>
 
-                      {/* 닫기 버튼 */}
                       <div className="p-2 border-t border-slate-100">
                         <button
                           onClick={() => setShowGoogleFolderDropdown(false)}
@@ -889,7 +887,7 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
         </div>
       </div>
 
-      {/* Custom Formats */}
+      {/* 3. Custom Formats */}
       <div className="card p-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-bold text-slate-900">
@@ -928,11 +926,10 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
           {customFormats.map((format) => (
             <div
               key={format.id}
-              className={`p-3 border rounded-xl ${
-                format.is_default
-                  ? "border-slate-900 bg-slate-50 ring-1 ring-slate-900"
-                  : "border-slate-200"
-              }`}
+              className={`p-3 border rounded-xl ${format.is_default
+                ? "border-slate-900 bg-slate-50 ring-1 ring-slate-900"
+                : "border-slate-200"
+                }`}
             >
               <div className="flex items-start gap-2">
                 <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-lg">
@@ -1028,101 +1025,148 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
         </div>
       </div>
 
-      {/* Push Notifications */}
+      {/* 4. Invite Friends */}
+      <InviteFriends />
+
+      {/* 5. Push Notifications (Accordion) */}
       {pushSupported && (
-        <div className="card p-4">
-          <h2 className="text-base font-bold text-slate-900 mb-3">
-            {t.settings.pushNotification.title}
-          </h2>
-          <div className="flex items-center justify-between p-3 border border-slate-200 rounded-xl">
-            <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-slate-900 text-sm">
-                {pushEnabled ? t.settings.pushNotification.enabled : t.settings.pushNotification.disabled}
-              </h3>
-              <p className="text-xs text-slate-500">{t.settings.pushNotification.description}</p>
-              {pushError && (
-                <p className="text-xs text-red-500 mt-1">{pushError}</p>
-              )}
+        <div className="card p-0 overflow-hidden">
+          <button
+            onClick={() => toggleSection("push")}
+            className="w-full bg-white flex items-center justify-between p-4"
+          >
+            <span className="font-bold text-slate-900 text-base">{t.settings.pushNotification.title}</span>
+            <svg
+              className={`w-5 h-5 text-slate-400 transition-transform ${openSection === "push" ? "rotate-180" : ""}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {openSection === "push" && (
+            <div className="p-4 border-t border-slate-100 animate-slide-down">
+              <div className="flex items-center justify-between p-3 border border-slate-200 rounded-xl">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-slate-900 text-sm">
+                    {pushEnabled ? t.settings.pushNotification.enabled : t.settings.pushNotification.disabled}
+                  </h3>
+                  <p className="text-xs text-slate-500">{t.settings.pushNotification.description}</p>
+                  {pushError && (
+                    <p className="text-xs text-red-500 mt-1">{pushError}</p>
+                  )}
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={pushEnabled}
+                    disabled={pushLoading}
+                    onChange={(e) => handleTogglePush(e.target.checked)}
+                  />
+                  <div className={`w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-900 ${pushLoading ? 'opacity-50' : ''}`}></div>
+                </label>
+              </div>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                className="sr-only peer"
-                checked={pushEnabled}
-                disabled={pushLoading}
-                onChange={(e) => handleTogglePush(e.target.checked)}
-              />
-              <div className={`w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-900 ${pushLoading ? 'opacity-50' : ''}`}></div>
-            </label>
-          </div>
+          )}
         </div>
       )}
 
-      {/* Data Management */}
-      <div className="card p-4">
-        <h2 className="text-base font-bold text-slate-900 mb-3">
-          {t.settings.data.title}
-        </h2>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 border border-slate-200 rounded-xl">
-            <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-slate-900 text-sm">{t.settings.data.autoDelete}</h3>
-              <p className="text-xs text-slate-500">{t.settings.data.autoDeleteDesc}</p>
+      {/* 6. Data Management (Accordion) */}
+      <div className="card p-0 overflow-hidden">
+        <button
+          onClick={() => toggleSection("data")}
+          className="w-full bg-white flex items-center justify-between p-4"
+        >
+          <span className="font-bold text-slate-900 text-base">{t.settings.data.title}</span>
+          <svg
+            className={`w-5 h-5 text-slate-400 transition-transform ${openSection === "data" ? "rotate-180" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {openSection === "data" && (
+          <div className="p-4 border-t border-slate-100 animate-slide-down space-y-3">
+            <div className="flex items-center justify-between p-3 border border-slate-200 rounded-xl">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-slate-900 text-sm">{t.settings.data.autoDelete}</h3>
+                <p className="text-xs text-slate-500">{t.settings.data.autoDeleteDesc}</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={autoSave}
+                  onChange={(e) => setAutoSave(e.target.checked)}
+                />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-900"></div>
+              </label>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                className="sr-only peer"
-                checked={autoSave}
-                onChange={(e) => setAutoSave(e.target.checked)}
-              />
-              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-900"></div>
-            </label>
-          </div>
 
-          <div className="p-3 bg-red-50 border border-red-100 rounded-xl">
-            <h3 className="font-bold text-red-700 text-sm mb-1">{t.settings.data.danger}</h3>
-            <p className="text-xs text-red-600 mb-3">{t.settings.data.dangerDesc}</p>
-            <button
-              onClick={handleDeleteAllData}
-              className="px-3 py-2 bg-white border border-red-200 text-red-600 rounded-lg text-xs font-medium min-h-[44px]"
-            >
-              {t.settings.data.deleteAll}
-            </button>
+            <div className="p-3 bg-red-50 border border-red-100 rounded-xl">
+              <h3 className="font-bold text-red-700 text-sm mb-1">{t.settings.data.danger}</h3>
+              <p className="text-xs text-red-600 mb-3">{t.settings.data.dangerDesc}</p>
+              <button
+                onClick={handleDeleteAllData}
+                className="px-3 py-2 bg-white border border-red-200 text-red-600 rounded-lg text-xs font-medium min-h-[44px]"
+              >
+                {t.settings.data.deleteAll}
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Language Settings */}
-      <div className="card p-4">
-        <h2 className="text-base font-bold text-slate-900 mb-3">
-          {t.settings.language.title}
-        </h2>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setLocale("ko")}
-            className={`flex-1 px-3 py-3 rounded-xl font-medium text-sm transition-all min-h-[44px] ${
-              locale === "ko"
-                ? "bg-slate-900 text-white"
-                : "bg-slate-100 text-slate-700"
-            }`}
+      {/* 7. Language (Accordion) */}
+      <div className="card p-0 overflow-hidden">
+        <button
+          onClick={() => toggleSection("language")}
+          className="w-full bg-white flex items-center justify-between p-4"
+        >
+          <span className="font-bold text-slate-900 text-base">{t.settings.language.title}</span>
+          <svg
+            className={`w-5 h-5 text-slate-400 transition-transform ${openSection === "language" ? "rotate-180" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            한국어
-          </button>
-          <button
-            onClick={() => setLocale("en")}
-            className={`flex-1 px-3 py-3 rounded-xl font-medium text-sm transition-all min-h-[44px] ${
-              locale === "en"
-                ? "bg-slate-900 text-white"
-                : "bg-slate-100 text-slate-700"
-            }`}
-          >
-            English
-          </button>
-        </div>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {openSection === "language" && (
+          <div className="p-4 border-t border-slate-100 animate-slide-down">
+            <div className="flex gap-2">
+              <button
+                onClick={() => setLocale("ko")}
+                className={`flex-1 px-3 py-3 rounded-xl font-medium text-sm transition-all min-h-[44px] ${locale === "ko"
+                  ? "bg-slate-900 text-white"
+                  : "bg-slate-100 text-slate-700"
+                  }`}
+              >
+                한국어
+              </button>
+              <button
+                onClick={() => setLocale("en")}
+                className={`flex-1 px-3 py-3 rounded-xl font-medium text-sm transition-all min-h-[44px] ${locale === "en"
+                  ? "bg-slate-900 text-white"
+                  : "bg-slate-100 text-slate-700"
+                  }`}
+              >
+                English
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Sign Out */}
+      {/* 8. Sign Out */}
       <button
         onClick={handleSignOut}
         className="w-full py-3 px-4 border border-slate-200 text-slate-700 rounded-xl font-medium text-sm min-h-[44px]"
@@ -1130,7 +1174,7 @@ export function SettingsClient({ initialData }: SettingsClientProps) {
         {t.settings.signOut}
       </button>
 
-      {/* Contact */}
+      {/* 9. Contact */}
       <div className="text-center pt-4">
         <button
           onClick={() => router.push("/settings/contact")}

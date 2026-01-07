@@ -50,8 +50,12 @@ export const translations = {
           description: "Whisper API로 다국어 99% 정확도를 자랑합니다.",
         },
         summarization: {
-          title: "AI 요약",
-          description: "구조화된 회의록, 액션 아이템, 요약을 즉시 생성합니다.",
+          title: "AI 자동 요약",
+          description: "형식에 맞춰 핵심 내용과 할 일을 깔끔하게 정리해드립니다.",
+        },
+        notifications: {
+          title: "스마트 알림",
+          description: "요약이 완료되면 슬랙과 푸시 알림으로 즉시 알려드립니다.",
         },
       },
       howItWorks: {
@@ -130,10 +134,15 @@ export const translations = {
         formatting: "요약 중...",
         saving: "저장 중...",
       },
-      processingNotice: "이 페이지에서 나가셔도 자동으로 처리 후 슬랙으로 알려드립니다.",
+      processingNotice: {
+        base: "이 페이지에서 나가셔도 자동 처리됩니다.",
+        slack: "완료되면 슬랙으로 알려드릴게요 :)",
+        push: "완료되면 푸시알림으로 알려드릴게요 :)",
+        all: "완료되면 알려드릴게요 :)",
+      },
       noRecordings: "녹음이 없습니다",
-      noRecordingsDesc: "첫 번째 녹음을 시작해보세요.",
-      startRecording: "녹음 시작",
+      noRecordingsDesc: "첫 번째 회의나 아이디어를 기록해보세요.",
+      startRecording: "녹음 시작하기",
       errorSteps: {
         transcription: "음성 전사 단계",
         formatting: "AI 포맷팅 단계",
@@ -315,7 +324,10 @@ export const translations = {
         referralPlaceholder: "추천 코드 입력",
         referralApply: "적용",
         referralSuccess: "추천 코드가 적용되었습니다! 350분이 추가됩니다.",
-        referralError: "유효하지 않은 추천 코드입니다.",
+        referralError: "오류가 발생했습니다. 다시 시도해주세요.",
+        referralNotFound: "존재하지 않는 추천 코드입니다.",
+        referralSelf: "본인의 추천 코드는 사용할 수 없습니다.",
+        referralInvalidFormat: "코드는 8자리여야 합니다.",
         referralAlreadyUsed: "이미 추천 코드를 사용하셨습니다.",
       },
       step2: {
@@ -327,7 +339,7 @@ export const translations = {
         },
         integrations: {
           title: "서비스 연동",
-          description: "Notion, Google Docs, Slack과 연동하여 자동 저장 및 알림을 받을 수 있습니다.",
+          description: "Notion, Google Docs, Slack과 연동하고 푸시 알림으로 완료 소식을 받아보세요.",
         },
         customFormat: {
           title: "나만의 포맷",
@@ -446,6 +458,10 @@ export const translations = {
           title: "AI Summarization",
           description: "Get structured meeting notes, action items, and summaries instantly.",
         },
+        notifications: {
+          title: "Smart Notifications",
+          description: "Get instant alerts via Slack and Push when summaries are ready.",
+        },
       },
       howItWorks: {
         title: "How it works",
@@ -522,9 +538,14 @@ export const translations = {
         formatting: "Summarizing...",
         saving: "Saving...",
       },
-      processingNotice: "You can leave this page. We'll notify you via Slack when it's done.",
+      processingNotice: {
+        base: "Processing will continue in the background.",
+        slack: "We'll notify you on Slack when it's done :)",
+        push: "We'll notify you via push notification when it's done :)",
+        all: "We'll notify you when it's done :)",
+      },
       noRecordings: "No recordings found",
-      noRecordingsDesc: "Start your first recording to see it here.",
+      noRecordingsDesc: "Start recording your meetings or ideas.",
       startRecording: "Start Recording",
       errorSteps: {
         transcription: "Transcription step",
@@ -707,7 +728,10 @@ export const translations = {
         referralPlaceholder: "Enter referral code",
         referralApply: "Apply",
         referralSuccess: "Referral code applied! 350 minutes added.",
-        referralError: "Invalid referral code.",
+        referralError: "An error occurred. Please try again.",
+        referralNotFound: "Referral code not found.",
+        referralSelf: "You cannot use your own referral code.",
+        referralInvalidFormat: "Code must be 8 characters long.",
         referralAlreadyUsed: "You have already used a referral code.",
       },
       step2: {
@@ -719,7 +743,7 @@ export const translations = {
         },
         integrations: {
           title: "Service Integrations",
-          description: "Connect with Notion, Google Docs, and Slack for auto-save and notifications.",
+          description: "Connect with Notion, Google Docs, Slack, and get notified via Push when done.",
         },
         customFormat: {
           title: "Custom Formats",

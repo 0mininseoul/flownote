@@ -75,7 +75,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 sm:gap-8">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 sm:gap-8">
             {[
               {
                 icon: "🎙️",
@@ -94,6 +94,12 @@ export default function Home() {
                 title: t.landing.features.summarization.title,
                 description: t.landing.features.summarization.description,
                 color: "bg-slate-800 text-white"
+              },
+              {
+                icon: "🔔",
+                title: t.landing.features.notifications.title,
+                description: t.landing.features.notifications.description,
+                color: "bg-amber-50 text-amber-600"
               },
             ].map((feature, idx) => (
               <div key={idx} className="card p-4 sm:p-8 hover:-translate-y-1 transition-transform duration-300">

@@ -33,10 +33,21 @@ function OnboardingContent() {
         setReferralMessage(t.onboarding.step1.referralSuccess);
       } else {
         setReferralStatus("error");
-        if (data.error === "Already referred") {
-          setReferralMessage(t.onboarding.step1.referralAlreadyUsed);
-        } else {
-          setReferralMessage(t.onboarding.step1.referralError);
+        switch (data.code) {
+          case "INVALID_FORMAT":
+            setReferralMessage(t.onboarding.step1.referralInvalidFormat);
+            break;
+          case "ALREADY_USED":
+            setReferralMessage(t.onboarding.step1.referralAlreadyUsed);
+            break;
+          case "SELF_REFERRAL":
+            setReferralMessage(t.onboarding.step1.referralSelf);
+            break;
+          case "NOT_FOUND":
+            setReferralMessage(t.onboarding.step1.referralNotFound);
+            break;
+          default:
+            setReferralMessage(t.onboarding.step1.referralError);
         }
       }
     } catch (error) {
@@ -75,19 +86,17 @@ function OnboardingContent() {
             {[1, 2].map((num) => (
               <div key={num} className="flex items-center">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${
-                    step >= num
+                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${step >= num
                       ? "bg-slate-900 text-white"
                       : "bg-slate-100 text-slate-400"
-                  }`}
+                    }`}
                 >
                   {num}
                 </div>
                 {num < 2 && (
                   <div
-                    className={`w-8 h-0.5 mx-1 rounded-full transition-all duration-300 ${
-                      step > num ? "bg-slate-900" : "bg-slate-200"
-                    }`}
+                    className={`w-8 h-0.5 mx-1 rounded-full transition-all duration-300 ${step > num ? "bg-slate-900" : "bg-slate-200"
+                      }`}
                   />
                 )}
               </div>

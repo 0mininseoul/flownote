@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     if (!referralCode || referralCode.length !== 8) {
       return NextResponse.json(
-        { error: "Invalid referral code" },
+        { error: "Invalid format", code: "INVALID_FORMAT" },
         { status: 400 }
       );
     }
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     // 이미 레퍼럴 코드를 입력한 경우
     if (currentUser?.referred_by) {
       return NextResponse.json(
-        { error: "Referral code already used" },
+        { error: "Referral code already used", code: "ALREADY_USED" },
         { status: 400 }
       );
     }
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     // 자기 자신의 코드인 경우
     if (currentUser?.referral_code === referralCode.toUpperCase()) {
       return NextResponse.json(
-        { error: "Cannot use your own referral code" },
+        { error: "Cannot use your own referral code", code: "SELF_REFERRAL" },
         { status: 400 }
       );
     }
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
 
     if (referrerError || !referrer) {
       return NextResponse.json(
-        { error: "Referral code not found" },
+        { error: "Referral code not found", code: "NOT_FOUND" },
         { status: 404 }
       );
     }

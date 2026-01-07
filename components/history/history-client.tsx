@@ -8,9 +8,11 @@ import { useI18n } from "@/lib/i18n";
 
 interface HistoryClientProps {
   initialRecordings: Recording[];
+  pushEnabled: boolean;
+  slackConnected: boolean;
 }
 
-export function HistoryClient({ initialRecordings }: HistoryClientProps) {
+export function HistoryClient({ initialRecordings, pushEnabled, slackConnected }: HistoryClientProps) {
   const router = useRouter();
   const { t } = useI18n();
   const [recordings, setRecordings] = useState<Recording[]>(initialRecordings);
@@ -202,11 +204,10 @@ export function HistoryClient({ initialRecordings }: HistoryClientProps) {
             <button
               key={item.value}
               onClick={() => setFilter(item.value as any)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap min-h-[44px] ${
-                filter === item.value
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap min-h-[44px] ${filter === item.value
                   ? "bg-slate-900 text-white"
                   : "bg-slate-100 text-slate-600"
-              }`}
+                }`}
             >
               {item.label}
             </button>
@@ -316,8 +317,11 @@ export function HistoryClient({ initialRecordings }: HistoryClientProps) {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                           </svg>
                           <span className="leading-relaxed">
-                            이 페이지에서 나가셔도 자동 처리됩니다.<br />
-                            완료되면 슬랙으로 알려드릴게요 :)
+                            {t.history.processingNotice.base}
+                            <br />
+                            {pushEnabled && slackConnected && t.history.processingNotice.all}
+                            {pushEnabled && !slackConnected && t.history.processingNotice.push}
+                            {!pushEnabled && slackConnected && t.history.processingNotice.slack}
                           </span>
                         </div>
                       </div>

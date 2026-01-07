@@ -22,6 +22,13 @@ export default async function HistoryPage() {
     .neq("is_hidden", true)
     .order("created_at", { ascending: false });
 
+  // Fetch user settings for dynamic messages
+  const { data: profile } = await supabase
+    .from("users")
+    .select("push_enabled, slack_access_token")
+    .eq("id", user.id)
+    .single();
+
   return (
     <div className="app-container">
       {/* Header */}
@@ -31,7 +38,11 @@ export default async function HistoryPage() {
 
       {/* Main Content */}
       <main className="app-main">
-        <HistoryClient initialRecordings={recordings || []} />
+        <HistoryClient
+          initialRecordings={recordings || []}
+          pushEnabled={profile?.push_enabled ?? false}
+          slackConnected={!!profile?.slack_access_token}
+        />
       </main>
 
       {/* Bottom Tab Navigation */}
