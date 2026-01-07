@@ -91,6 +91,7 @@ export async function DELETE(request: Request) {
         referred_users_count: referredUsersCount || 0,
         was_referred: !!userData.referred_by,
         user_data: userData, // Store full user data snapshot
+        name: userData.name, // Store name for easy access
       });
 
     if (archiveError) {
@@ -121,9 +122,21 @@ export async function DELETE(request: Request) {
       console.error("Failed to delete custom formats:", formatsError);
     }
 
-    // 9. Delete user data from public.users table
+    // 9. Unlink referred users (set referred_by to NULL) to prevent FK constraint violation
+    const { error: unlinkError } = await supabaseAdmin
+      .from("users")
+      .update({ referred_by: null })
+      .eq("referred_by", user.id);
+
+    if (unlinkError) {
+      console.error("Failed to unlink referred users:", unlinkError);
+      // Check if this is critical? Probably yes if it blocks deletion
+    }
+
+    // 10. Delete user data from public.users table
     // Note: We do this before deleting from auth to ensure clean public data removal
-    const { error: userError } = await supabase
+    // using supabaseAdmin to ensure we can delete even if some RLS or other logic interferes
+    const { error: userError } = await supabaseAdmin
       .from("users")
       .delete()
       .eq("id", user.id);
@@ -131,12 +144,12 @@ export async function DELETE(request: Request) {
     if (userError) {
       console.error("Failed to delete user:", userError);
       return NextResponse.json(
-        { error: "Failed to delete user data" },
+        { error: "Failed to delete user data: " + userError.message },
         { status: 500 }
       );
     }
 
-    // 10. Delete user from Supabase Auth (Hard Delete)
+    // 11. Delete user from Supabase Auth (Hard Delete)
     // This allows the user to sign up again as a completely new user
     const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(
       user.id
