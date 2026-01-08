@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 // GET - 내 레퍼럴 코드 조회
@@ -80,8 +80,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 레퍼럴 코드로 추천인 찾기
-    const { data: referrer, error: referrerError } = await supabase
+    // 레퍼럴 코드로 추천인 찾기 (RLS 우회를 위해 admin client 사용)
+    const supabaseAdmin = createServiceRoleClient();
+    const { data: referrer, error: referrerError } = await supabaseAdmin
       .from("users")
       .select("id, bonus_minutes")
       .eq("referral_code", referralCode.toUpperCase())
@@ -112,8 +113,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. 추천인에게도 보너스 지급
-    const { error: referrerUpdateError } = await supabase
+    // 2. 추천인에게도 보너스 지급 (RLS 우회를 위해 admin client 사용)
+    const { error: referrerUpdateError } = await supabaseAdmin
       .from("users")
       .update({
         bonus_minutes: (referrer.bonus_minutes || 0) + 350,
