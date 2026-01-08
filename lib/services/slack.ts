@@ -101,7 +101,7 @@ export async function sendSlackNotification(
 // OAuth helpers
 export function getSlackAuthUrl(redirectUri: string, state?: string): string {
   const clientId = process.env.SLACK_CLIENT_ID!;
-  const scopes = "chat:write,channels:read,groups:read";
+  const scopes = "chat:write,channels:read,groups:read,im:write";
 
   const params = new URLSearchParams({
     client_id: clientId,
