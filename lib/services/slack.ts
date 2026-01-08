@@ -6,55 +6,95 @@ export async function sendSlackNotification(
   channelId: string,
   title: string,
   duration: number,
-  notionUrl: string
+  urls: {
+    notionUrl?: string;
+    googleDocUrl?: string;
+    flownoteUrl: string;
+  }
 ): Promise<void> {
   const client = new WebClient(accessToken);
 
   const durationMinutes = Math.floor(duration / 60);
   const date = formatKSTDate();
 
+  // 버튼 동적 생성
+  const actionsElements: any[] = [];
+
+  if (urls.notionUrl) {
+    actionsElements.push({
+      type: "button",
+      text: {
+        type: "plain_text",
+        text: "Notion에서 보기",
+      },
+      url: urls.notionUrl,
+      style: "primary",
+    });
+  }
+
+  if (urls.googleDocUrl) {
+    actionsElements.push({
+      type: "button",
+      text: {
+        type: "plain_text",
+        text: "Google Docs에서 보기",
+      },
+      url: urls.googleDocUrl,
+      style: "primary",
+    });
+  }
+
+  // 연결된 문서가 없으면 Flownote 링크 제공
+  if (actionsElements.length === 0) {
+    actionsElements.push({
+      type: "button",
+      text: {
+        type: "plain_text",
+        text: "FlowNote에서 보기",
+      },
+      url: urls.flownoteUrl,
+      style: "primary",
+    });
+  }
+
+  const blocks: any[] = [
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: "✅ *녹음 처리 완료!*",
+      },
+    },
+    {
+      type: "section",
+      fields: [
+        {
+          type: "mrkdwn",
+          text: `📝 *${title}*`,
+        },
+        {
+          type: "mrkdwn",
+          text: `⏱️ ${durationMinutes}분`,
+        },
+        {
+          type: "mrkdwn",
+          text: `📅 ${date}`,
+        },
+      ],
+    },
+  ];
+
+  // 버튼이 있을 경우에만 액션 블록 추가
+  if (actionsElements.length > 0) {
+    blocks.push({
+      type: "actions",
+      elements: actionsElements,
+    });
+  }
+
   await client.chat.postMessage({
     channel: channelId,
-    blocks: [
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: "✅ *녹음 처리 완료!*",
-        },
-      },
-      {
-        type: "section",
-        fields: [
-          {
-            type: "mrkdwn",
-            text: `📝 *${title}*`,
-          },
-          {
-            type: "mrkdwn",
-            text: `⏱️ ${durationMinutes}분`,
-          },
-          {
-            type: "mrkdwn",
-            text: `📅 ${date}`,
-          },
-        ],
-      },
-      {
-        type: "actions",
-        elements: [
-          {
-            type: "button",
-            text: {
-              type: "plain_text",
-              text: "Notion에서 보기",
-            },
-            url: notionUrl,
-            style: "primary",
-          },
-        ],
-      },
-    ],
+    blocks,
   });
 }
 

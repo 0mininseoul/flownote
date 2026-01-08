@@ -406,16 +406,24 @@ async function processRecording(
     }
 
     // Step 5: Send Slack notification (optional)
-    const documentUrl = notionUrl || googleDocUrl;
-    if (userData.slack_access_token && userData.slack_channel_id && documentUrl) {
+    // 기존에는 documentUrl이 있어야 보냈지만, 이제는 없어도 보냄 (FlowNote 링크 제공)
+    if (userData.slack_access_token && userData.slack_channel_id) {
       try {
         console.log(`[${recordingId}] Step 5: Sending Slack notification...`);
+
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
+        const flownoteUrl = `${appUrl}/recordings/${recordingId}`;
+
         await sendSlackNotification(
           userData.slack_access_token,
           userData.slack_channel_id,
           aiGeneratedTitle,
           duration,
-          documentUrl
+          {
+            notionUrl: notionUrl || undefined,
+            googleDocUrl: googleDocUrl || undefined,
+            flownoteUrl,
+          }
         );
         console.log(`[${recordingId}] Slack notification sent`);
       } catch (error) {
