@@ -18,7 +18,7 @@ export default async function SettingsPage() {
   const [{ data: userData }, { data: formatsData }] = await Promise.all([
     supabase
       .from("users")
-      .select("monthly_minutes_used, notion_access_token, notion_database_id, notion_save_target_type, notion_save_target_title, slack_access_token, google_access_token, google_folder_id, google_folder_name, push_enabled")
+      .select("monthly_minutes_used, notion_access_token, notion_database_id, notion_save_target_type, notion_save_target_title, slack_access_token, google_access_token, google_folder_id, google_folder_name, push_enabled, bonus_minutes")
       .eq("id", user.id)
       .single(),
     supabase
@@ -32,7 +32,7 @@ export default async function SettingsPage() {
     email: user.email || "",
     usage: {
       used: userData?.monthly_minutes_used || 0,
-      limit: 350,
+      limit: 350 + (userData?.bonus_minutes || 0),
     },
     notionConnected: !!userData?.notion_access_token,
     slackConnected: !!userData?.slack_access_token,
