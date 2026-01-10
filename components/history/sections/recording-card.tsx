@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Recording } from "@/types";
 import { formatDurationMinutes } from "@/lib/utils";
@@ -53,10 +53,6 @@ function getFormatEmoji(format: string): string {
 // Component
 // =============================================================================
 
-// =============================================================================
-// Component
-// =============================================================================
-
 export function RecordingCard({
   recording,
   pushEnabled,
@@ -66,6 +62,13 @@ export function RecordingCard({
 }: RecordingCardProps) {
   const router = useRouter();
   const { t } = useI18n();
+
+  // Prefetch for performance
+  useEffect(() => {
+    if (recording.transcript) {
+      router.prefetch(`/recordings/${recording.id}`);
+    }
+  }, [recording.id, recording.transcript, router]);
 
   // Gesture state
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -101,14 +104,13 @@ export function RecordingCard({
   const handleTouchEnd = () => {
     if (touchStart === null) return;
 
-    if (swipeOffset <= MAX_SWIPE_LEFT) {
+    if (swipeOffset <= MAX_SWIPE_LEFT / 2) {
       // Snapped to delete state
       setIsDeleting(true);
       setSwipeOffset(MAX_SWIPE_LEFT);
-    } else if (swipeOffset >= MAX_SWIPE_RIGHT) {
-      // Trigger pin action and reset
-      onPin && onPin(recording.id, !recording.is_pinned);
-      setSwipeOffset(0);
+    } else if (swipeOffset >= MAX_SWIPE_RIGHT / 2) {
+      // Snapped to pin state (Reveal)
+      setSwipeOffset(MAX_SWIPE_RIGHT);
     } else {
       // Reset if not enough swipe
       setSwipeOffset(0);
@@ -116,6 +118,15 @@ export function RecordingCard({
     }
     setTouchStart(null);
   };
+
+  const handlePin = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onPin && onPin(recording.id, !recording.is_pinned);
+      setSwipeOffset(0);
+    },
+    [recording.id, recording.is_pinned, onPin]
+  );
 
   const getStatusText = useCallback(
     (status: string, processingStep?: string) => {
@@ -195,11 +206,16 @@ export function RecordingCard({
       {/* Background Actions */}
       <div className="absolute inset-y-0 left-0 w-full flex items-center justify-between px-4">
         {/* Pin Action (Left Side) */}
-        <div className={`flex items-center text-blue-500 font-medium transition-opacity ${swipeOffset > 0 ? 'opacity-100' : 'opacity-0'}`}>
-          <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-          </svg>
-          {recording.is_pinned ? "고정 해제" : "고정"}
+        <div className={`flex items-center justify-start h-full transition-opacity ${swipeOffset > 0 ? 'opacity-100' : 'opacity-0'}`}>
+          <button
+            onClick={handlePin}
+            className="bg-blue-500 text-white w-[80px] h-full flex flex-col items-center justify-center font-medium"
+          >
+            <svg className="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+            </svg>
+            <span className="text-[11px]">{recording.is_pinned ? "해제" : "고정"}</span>
+          </button>
         </div>
 
         {/* Delete Action (Right Side) */}
@@ -216,7 +232,7 @@ export function RecordingCard({
 
       {/* Main Card Content */}
       <div
-        className={`bg-white p-4 relative transition-transform duration-200 ease-out border border-transparent ${recording.transcript ? "cursor-pointer" : "cursor-default"} ${recording.is_pinned ? "border-blue-200 bg-blue-50/10" : "border-white"}`}
+        className={`bg-white p-3 relative transition-transform duration-200 ease-out border ${recording.transcript ? "cursor-pointer" : "cursor-default"} ${recording.is_pinned ? "border-blue-200 bg-blue-50/10" : "border-slate-200"}`}
         style={{ transform: `translateX(${swipeOffset}px)` }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
