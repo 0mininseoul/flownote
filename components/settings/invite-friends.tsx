@@ -64,7 +64,7 @@ export function InviteFriends() {
     }
   }, []);
 
-  const shareMessage = `나 요즘 이 앱으로 회의 녹음하면 자동으로 요약해주더라! 한번 써봐 👉 ${appUrl}\n\n내 추천 코드: ${referralCode}\n코드 입력하면 너도 나도 350분 추가 사용 가능!`;
+  const shareMessage = `Archy에 초대받으셨어요!\n\n${appUrl}\n\n내 추천 코드: ${referralCode}\n\n지금 코드 입력하고 무료 크레딧을 받으세요.`;
 
   const handleKakaoShare = () => {
     if (!kakaoLoaded || !window.Kakao) {
@@ -81,7 +81,7 @@ export function InviteFriends() {
       },
       buttons: [
         {
-          title: "앱 열기",
+          title: "350분 무료 크레딧 받기",
           link: {
             mobileWebUrl: appUrl,
             webUrl: appUrl,
