@@ -24,9 +24,11 @@ export function InviteFriends() {
       try {
         const response = await fetch("/api/user/referral");
         if (response.ok) {
-          const data = await response.json();
-          setReferralCode(data.referralCode || "");
-          setBonusMinutes(data.bonusMinutes || 0);
+          const result = await response.json();
+          if (result.success && result.data) {
+            setReferralCode(result.data.referralCode || "");
+            setBonusMinutes(result.data.bonusMinutes || 0);
+          }
         }
       } catch (error) {
         console.error("Failed to fetch referral code:", error);
