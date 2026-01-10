@@ -85,6 +85,16 @@ export async function PATCH(
       updateData.is_hidden = is_hidden;
     }
 
+    if (body.is_pinned !== undefined) {
+      if (typeof body.is_pinned !== "boolean") {
+        return NextResponse.json(
+          { error: "Invalid is_pinned value" },
+          { status: 400 }
+        );
+      }
+      updateData.is_pinned = body.is_pinned;
+    }
+
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
         { error: "No valid fields to update" },

@@ -31,6 +31,7 @@ export interface Recording {
   error_step?: ErrorStep;
   is_hidden?: boolean;
   created_at: string;
+  is_pinned?: boolean;
 }
 
 export type RecordingFormat = "meeting" | "interview" | "lecture" | "custom";

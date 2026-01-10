@@ -42,6 +42,45 @@ export function RecordingDetailClient({ recording }: RecordingDetailClientProps)
   const router = useRouter();
   const { t } = useI18n();
   const [viewMode, setViewMode] = useState<"transcript" | "formatted">("formatted");
+  const [isEditing, setIsEditing] = useState(false);
+  const [recordingTitle, setRecordingTitle] = useState(recording.title);
+  const [editingTitle, setEditingTitle] = useState("");
+
+  const startEditing = useCallback(() => {
+    setIsEditing(true);
+    setEditingTitle(recordingTitle);
+  }, [recordingTitle]);
+
+  const cancelEditing = useCallback(() => {
+    setIsEditing(false);
+    setEditingTitle("");
+  }, []);
+
+  const saveTitle = useCallback(async () => {
+    if (!editingTitle.trim()) {
+      alert("제목을 입력해주세요.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/recordings/${recording.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: editingTitle.trim() }),
+      });
+
+      if (response.ok) {
+        setRecordingTitle(editingTitle.trim());
+        setIsEditing(false);
+        setEditingTitle("");
+      } else {
+        throw new Error("Update failed");
+      }
+    } catch (error) {
+      console.error("Failed to update title:", error);
+      alert("제목 변경에 실패했습니다.");
+    }
+  }, [recording.id, editingTitle]);
 
   const getStatusText = useCallback((status: string) => {
     switch (status) {
@@ -85,24 +124,54 @@ export function RecordingDetailClient({ recording }: RecordingDetailClientProps)
     <div className="app-container">
       {/* Header */}
       <header className="app-header max-w-[430px] mx-auto w-full left-0 right-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
           <button
             onClick={() => router.back()}
-            className="p-2 -ml-2 text-slate-500 hover:text-slate-900 rounded-full transition-colors"
+            className="p-2 -ml-2 text-slate-500 hover:text-slate-900 rounded-full transition-colors flex-shrink-0"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <h1 className="text-lg font-bold text-slate-900 truncate max-w-[200px]">{recording.title}</h1>
+
+          {isEditing ? (
+            <div className="flex-1 flex items-center gap-2 min-w-0">
+              <input
+                type="text"
+                value={editingTitle}
+                onChange={(e) => setEditingTitle(e.target.value)}
+                className="flex-1 px-3 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 text-sm min-w-0"
+                autoFocus
+              />
+              <button
+                onClick={saveTitle}
+                className="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-xs font-medium whitespace-nowrap"
+              >
+                저장
+              </button>
+              <button
+                onClick={cancelEditing}
+                className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-xs font-medium whitespace-nowrap"
+              >
+                취소
+              </button>
+            </div>
+          ) : (
+            <h1
+              onClick={startEditing}
+              className="text-lg font-bold text-slate-900 truncate flex-1 cursor-pointer hover:opacity-70 transition-opacity"
+            >
+              {recordingTitle}
+            </h1>
+          )}
         </div>
 
-        {recording.notion_page_url && (
+        {!isEditing && recording.notion_page_url && (
           <a
             href={recording.notion_page_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="p-2 text-slate-500 hover:text-slate-900 rounded-full transition-colors"
+            className="p-2 text-slate-500 hover:text-slate-900 rounded-full transition-colors flex-shrink-0"
             title="Notion에서 보기"
           >
             <Image
@@ -144,8 +213,8 @@ export function RecordingDetailClient({ recording }: RecordingDetailClientProps)
                   <button
                     onClick={() => setViewMode("formatted")}
                     className={`flex-1 py-3 text-sm font-medium transition-colors ${viewMode === "formatted"
-                        ? "bg-slate-50 text-slate-900 border-b-2 border-slate-900"
-                        : "text-slate-400 hover:text-slate-600"
+                      ? "bg-slate-50 text-slate-900 border-b-2 border-slate-900"
+                      : "text-slate-400 hover:text-slate-600"
                       }`}
                   >
                     정리된 문서
@@ -155,8 +224,8 @@ export function RecordingDetailClient({ recording }: RecordingDetailClientProps)
                   <button
                     onClick={() => setViewMode("transcript")}
                     className={`flex-1 py-3 text-sm font-medium transition-colors ${viewMode === "transcript"
-                        ? "bg-slate-50 text-slate-900 border-b-2 border-slate-900"
-                        : "text-slate-400 hover:text-slate-600"
+                      ? "bg-slate-50 text-slate-900 border-b-2 border-slate-900"
+                      : "text-slate-400 hover:text-slate-600"
                       }`}
                   >
                     원본 전사본

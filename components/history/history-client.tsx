@@ -65,10 +65,42 @@ export function HistoryClient({ initialRecordings, pushEnabled, slackConnected }
     }
   }, []);
 
-  const handleTitleUpdate = useCallback((id: string, newTitle: string) => {
-    setRecordings((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, title: newTitle } : r))
-    );
+  const handlePinRecording = useCallback(async (id: string, isPinned: boolean) => {
+    // Optimistic update
+    setRecordings((prev) => {
+      const updated = prev.map((r) => (r.id === id ? { ...r, is_pinned: isPinned } : r));
+      return updated.sort((a, b) => {
+        if (a.is_pinned === b.is_pinned) {
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        }
+        return a.is_pinned ? -1 : 1;
+      });
+    });
+
+    try {
+      const response = await fetch(`/api/recordings/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_pinned: isPinned }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Pin failed");
+      }
+    } catch (error) {
+      console.error("Failed to pin recording:", error);
+      alert("고정 설정을 변경하는데 실패했습니다.");
+      // Revert optimism
+      setRecordings((prev) => {
+        const updated = prev.map((r) => (r.id === id ? { ...r, is_pinned: !isPinned } : r));
+        return updated.sort((a, b) => {
+          if (a.is_pinned === b.is_pinned) {
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          }
+          return a.is_pinned ? -1 : 1;
+        });
+      });
+    }
   }, []);
 
   const filteredRecordings = recordings.filter((recording) => {
@@ -94,7 +126,7 @@ export function HistoryClient({ initialRecordings, pushEnabled, slackConnected }
                 pushEnabled={pushEnabled}
                 slackConnected={slackConnected}
                 onHide={handleHideRecording}
-                onTitleUpdate={handleTitleUpdate}
+                onPin={handlePinRecording}
               />
             ))}
           </div>

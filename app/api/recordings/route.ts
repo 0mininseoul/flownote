@@ -91,6 +91,7 @@ export const GET = withAuth<{ recordings: Recording[] }>(async ({ user, supabase
     .select("*")
     .eq("user_id", user.id)
     .neq("is_hidden", true)
+    .order("is_pinned", { ascending: false })
     .order("created_at", { ascending: false });
 
   if (error) {

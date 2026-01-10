@@ -15,7 +15,7 @@ interface RecordingCardProps {
   pushEnabled: boolean;
   slackConnected: boolean;
   onHide: (id: string) => void;
-  onTitleUpdate: (id: string, newTitle: string) => void;
+  onPin?: (id: string, isPinned: boolean) => void;
 }
 
 // =============================================================================
@@ -52,18 +52,69 @@ function getFormatEmoji(format: string): string {
 // Component
 // =============================================================================
 
+// =============================================================================
+// Component
+// =============================================================================
+
 export function RecordingCard({
   recording,
   pushEnabled,
   slackConnected,
   onHide,
-  onTitleUpdate,
+  onPin,
 }: RecordingCardProps) {
   const router = useRouter();
   const { t } = useI18n();
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [editingTitle, setEditingTitle] = useState("");
+  // Gesture state
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Constants
+  const MIN_SWIPE_DISTANCE = 50;
+  const MAX_SWIPE_LEFT = -80;
+  const MAX_SWIPE_RIGHT = 80;
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+    setIsDeleting(false);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+
+    const currentTouch = e.targetTouches[0].clientX;
+    const diff = currentTouch - touchStart;
+
+    // Limit swipe range
+    if (diff < 0) {
+      // Swiping left (delete)
+      setSwipeOffset(Math.max(diff, MAX_SWIPE_LEFT));
+    } else {
+      // Swiping right (pin)
+      setSwipeOffset(Math.min(diff, MAX_SWIPE_RIGHT));
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStart === null) return;
+
+    if (swipeOffset <= MAX_SWIPE_LEFT) {
+      // Snapped to delete state
+      setIsDeleting(true);
+      setSwipeOffset(MAX_SWIPE_LEFT);
+    } else if (swipeOffset >= MAX_SWIPE_RIGHT) {
+      // Trigger pin action and reset
+      onPin && onPin(recording.id, !recording.is_pinned);
+      setSwipeOffset(0);
+    } else {
+      // Reset if not enough swipe
+      setSwipeOffset(0);
+      setIsDeleting(false);
+    }
+    setTouchStart(null);
+  };
 
   const getStatusText = useCallback(
     (status: string, processingStep?: string) => {
@@ -111,230 +162,201 @@ export function RecordingCard({
     }
   }, []);
 
-  const startEditing = useCallback(() => {
-    setIsEditing(true);
-    setEditingTitle(recording.title);
-  }, [recording.title]);
-
-  const cancelEditing = useCallback(() => {
-    setIsEditing(false);
-    setEditingTitle("");
-  }, []);
-
-  const saveTitle = useCallback(async () => {
-    if (!editingTitle.trim()) {
-      alert(t.history.titleRequired);
+  const handleCardClick = useCallback(() => {
+    // Only navigate if we are not in swiped state (delete mode)
+    if (Math.abs(swipeOffset) > 10) {
+      setSwipeOffset(0);
+      setIsDeleting(false);
       return;
     }
 
-    try {
-      const response = await fetch(`/api/recordings/${recording.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: editingTitle.trim() }),
-      });
-
-      if (response.ok) {
-        onTitleUpdate(recording.id, editingTitle.trim());
-        setIsEditing(false);
-        setEditingTitle("");
-      } else {
-        throw new Error("Update failed");
-      }
-    } catch (error) {
-      console.error("Failed to update title:", error);
-      alert(t.history.titleUpdateFailed);
-    }
-  }, [recording.id, editingTitle, t, onTitleUpdate]);
-
-  const handleCardClick = useCallback(() => {
     if (recording.transcript) {
       router.push(`/recordings/${recording.id}`);
     }
-  }, [recording.transcript, recording.id, router]);
+  }, [recording.transcript, recording.id, router, swipeOffset]);
 
-  const handleHide = useCallback(
+  const handleDelete = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      onHide(recording.id);
+      if (confirm("정말로 이 녹음을 삭제하시겠습니까?")) {
+        onHide(recording.id);
+      } else {
+        // Reset check state
+        setSwipeOffset(0);
+        setIsDeleting(false);
+      }
     },
     [recording.id, onHide]
   );
 
   return (
-    <div
-      className={`card-touchable p-4 relative ${recording.transcript ? "cursor-pointer" : "cursor-default"}`}
-      onClick={handleCardClick}
-    >
-      {/* Hide Button */}
-      <button
-        onClick={handleHide}
-        className="absolute top-3 right-3 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors min-h-[32px] min-w-[32px] flex items-center justify-center"
-        aria-label="녹음 숨기기"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-
-      <div className="flex items-start gap-3">
-        {/* Icon */}
-        <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-xl flex-shrink-0">
-          {getFormatEmoji(recording.format)}
+    <div className="relative overflow-hidden rounded-xl bg-slate-100">
+      {/* Background Actions */}
+      <div className="absolute inset-y-0 left-0 w-full flex items-center justify-between px-4">
+        {/* Pin Action (Left Side) */}
+        <div className={`flex items-center text-blue-500 font-medium transition-opacity ${swipeOffset > 0 ? 'opacity-100' : 'opacity-0'}`}>
+          <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+          </svg>
+          {recording.is_pinned ? "고정 해제" : "고정"}
         </div>
 
-        {/* Content */}
-        <div className="flex-1 min-w-0 pr-6">
-          {isEditing ? (
-            <div className="flex gap-2 items-center" onClick={(e) => e.stopPropagation()}>
-              <input
-                type="text"
-                value={editingTitle}
-                onChange={(e) => setEditingTitle(e.target.value)}
-                className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 text-sm"
-                autoFocus
-              />
-              <button
-                onClick={saveTitle}
-                className="px-3 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium min-h-[44px]"
-              >
-                {t.common.save}
-              </button>
-              <button
-                onClick={cancelEditing}
-                className="px-3 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium min-h-[44px]"
-              >
-                {t.common.cancel}
-              </button>
+        {/* Delete Action (Right Side) */}
+        <div className={`flex items-center justify-end h-full transition-opacity ${swipeOffset < 0 ? 'opacity-100' : 'opacity-0'}`}>
+          <button
+            onClick={handleDelete}
+            className="bg-red-500 text-white px-4 h-full flex items-center justify-center font-medium absolute right-0 top-0 bottom-0 w-[80px]"
+            style={{ display: isDeleting ? 'flex' : 'none' }}
+          >
+            삭제
+          </button>
+        </div>
+      </div>
+
+      {/* Main Card Content */}
+      <div
+        className={`bg-white p-4 relative transition-transform duration-200 ease-out border border-transparent ${recording.transcript ? "cursor-pointer" : "cursor-default"} ${recording.is_pinned ? "border-blue-200 bg-blue-50/10" : "border-white"}`}
+        style={{ transform: `translateX(${swipeOffset}px)` }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onClick={handleCardClick}
+      >
+        {recording.is_pinned && (
+          <div className="absolute top-2 right-2 text-blue-500">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M16 5c0 .552-.448 1-1 1h-1v9l2 3v1H8v-1l2-3V6H9c-.552 0-1-.448-1-1s.448-1 1-1h6c.552 0 1 .448 1 1z" />
+            </svg>
+          </div>
+        )}
+
+        <div className="flex items-start gap-3">
+          {/* Icon */}
+          <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-xl flex-shrink-0">
+            {getFormatEmoji(recording.format)}
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 min-w-0 pr-2">
+            <h3 className="text-base font-bold text-slate-900 line-clamp-2">
+              {recording.title}
+            </h3>
+            <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
+              <span className="flex items-center gap-1">
+                {getStatusIcon(recording.status)} {getStatusText(recording.status, recording.processing_step)}
+              </span>
+              <span>·</span>
+              <span>{formatDurationMinutes(recording.duration_seconds)}</span>
             </div>
-          ) : (
-            <>
-              <h3
-                className="text-base font-bold text-slate-900 line-clamp-2"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  startEditing();
-                }}
-              >
-                {recording.title}
-              </h3>
-              <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
-                <span className="flex items-center gap-1">
-                  {getStatusIcon(recording.status)} {getStatusText(recording.status, recording.processing_step)}
-                </span>
-                <span>·</span>
-                <span>{formatDurationMinutes(recording.duration_seconds)}</span>
+
+            {/* Processing Status Info */}
+            {recording.status === "processing" && (
+              <div className="mt-3 p-2 bg-blue-50 border border-blue-100 rounded-lg">
+                <div className="flex items-start gap-2 text-xs text-blue-700">
+                  <svg
+                    className="w-3 h-3 mt-0.5 flex-shrink-0 animate-spin"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                  <span className="leading-relaxed">
+                    {t.history.processingNotice.base}
+                    <br />
+                    {pushEnabled && slackConnected && t.history.processingNotice.all}
+                    {pushEnabled && !slackConnected && t.history.processingNotice.push}
+                    {!pushEnabled && slackConnected && t.history.processingNotice.slack}
+                  </span>
+                </div>
               </div>
-            </>
-          )}
+            )}
 
-          {/* Processing Status Info */}
-          {recording.status === "processing" && (
-            <div className="mt-3 p-2 bg-blue-50 border border-blue-100 rounded-lg">
-              <div className="flex items-start gap-2 text-xs text-blue-700">
-                <svg
-                  className="w-3 h-3 mt-0.5 flex-shrink-0 animate-spin"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
-                <span className="leading-relaxed">
-                  {t.history.processingNotice.base}
-                  <br />
-                  {pushEnabled && slackConnected && t.history.processingNotice.all}
-                  {pushEnabled && !slackConnected && t.history.processingNotice.push}
-                  {!pushEnabled && slackConnected && t.history.processingNotice.slack}
-                </span>
+            {/* Error Message */}
+            {recording.status === "failed" && (
+              <div className="mt-3 p-2 bg-red-50 border border-red-100 rounded-lg">
+                <p className="text-xs text-red-600">
+                  {getUserFriendlyErrorMessage(recording.error_step, recording.error_message)}
+                </p>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Error Message */}
-          {recording.status === "failed" && (
-            <div className="mt-3 p-2 bg-red-50 border border-red-100 rounded-lg">
-              <p className="text-xs text-red-600">
-                {getUserFriendlyErrorMessage(recording.error_step, recording.error_message)}
-              </p>
-            </div>
-          )}
+            {/* Completed - Notion error message */}
+            {recording.status === "completed" && recording.error_step === "notion" && (
+              <div className="mt-3 p-2 bg-amber-50 border border-amber-100 rounded-lg">
+                <p className="text-xs text-amber-600">
+                  {getUserFriendlyErrorMessage(recording.error_step, recording.error_message)}
+                </p>
+              </div>
+            )}
 
-          {/* Completed - Notion error message */}
-          {recording.status === "completed" && recording.error_step === "notion" && (
-            <div className="mt-3 p-2 bg-amber-50 border border-amber-100 rounded-lg">
-              <p className="text-xs text-amber-600">
-                {getUserFriendlyErrorMessage(recording.error_step, recording.error_message)}
-              </p>
-            </div>
-          )}
+            {/* Completed - Actions */}
+            {recording.status === "completed" && (
+              <div className="flex items-center gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
+                {recording.notion_page_url && (
+                  <a
+                    href={recording.notion_page_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 rounded-lg text-xs font-medium text-slate-700 min-h-[36px]"
+                  >
+                    <span>Notion</span>
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                      />
+                    </svg>
+                  </a>
+                )}
+                {recording.google_doc_url && (
+                  <a
+                    href={recording.google_doc_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 rounded-lg text-xs font-medium text-blue-700 min-h-[36px]"
+                  >
+                    <span>Google Docs</span>
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                      />
+                    </svg>
+                  </a>
+                )}
+              </div>
+            )}
 
-          {/* Completed - Actions */}
-          {recording.status === "completed" && (
-            <div className="flex items-center gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
-              {recording.notion_page_url && (
-                <a
-                  href={recording.notion_page_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+            {/* Failed - Actions */}
+            {recording.status === "failed" && recording.transcript && (
+              <div className="flex items-center gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
+                <button
+                  onClick={() => router.push(`/recordings/${recording.id}`)}
                   className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 rounded-lg text-xs font-medium text-slate-700 min-h-[36px]"
                 >
-                  <span>Notion</span>
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                     />
                   </svg>
-                </a>
-              )}
-              {recording.google_doc_url && (
-                <a
-                  href={recording.google_doc_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 rounded-lg text-xs font-medium text-blue-700 min-h-[36px]"
-                >
-                  <span>Google Docs</span>
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                    />
-                  </svg>
-                </a>
-              )}
-            </div>
-          )}
-
-          {/* Failed - Actions */}
-          {recording.status === "failed" && recording.transcript && (
-            <div className="flex items-center gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
-              <button
-                onClick={() => router.push(`/recordings/${recording.id}`)}
-                className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 rounded-lg text-xs font-medium text-slate-700 min-h-[36px]"
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-                <span>{t.history.viewTranscript}</span>
-              </button>
-            </div>
-          )}
+                  <span>{t.history.viewTranscript}</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
