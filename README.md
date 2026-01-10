@@ -1,27 +1,31 @@
-# Flownote - 자동 음성 문서화 서비스
+# Archy - 자동 음성 문서화 서비스
 
 녹음 한 번 하면 완성되는 자동 문서
 
 ## 프로젝트 개요
 
-Flownote는 음성 녹음을 자동으로 텍스트로 변환하고, AI가 정리하여 Notion에 저장하고 Slack으로 알림을 보내주는 자동화 서비스입니다.
+Archy는 음성 녹음을 자동으로 텍스트로 변환하고, AI가 정리하여 Notion에 저장하고 Slack으로 알림을 보내주는 자동화 서비스입니다.
 
 ### 주요 기능
 
 - **원클릭 녹음**: 웹에서 바로 녹음 시작 (최대 120분)
-- **자동 STT**: WhisperAPI를 통한 고품질 음성-텍스트 변환
+- **자동 STT**: Groq Whisper Large V3를 통한 고품질 음성-텍스트 변환
 - **AI 문서 정리**: GPT-4o-mini로 회의록/인터뷰/강의 형식으로 자동 정리
 - **Notion 연동**: 정리된 문서를 Notion 페이지로 자동 생성
+- **Google Docs 연동**: Google Docs에 문서 저장 지원
 - **Slack 알림**: 처리 완료 시 Slack 메시지 전송
+- **Push 알림**: 웹 푸시 알림으로 처리 완료 알림
+- **리퍼럴 시스템**: 추천인 코드로 보너스 분 적립
 - **PWA 지원**: 모바일 홈 화면에 추가 가능
 - **다국어 지원**: 한국어/영어 자동 감지 및 설정
+- **Amplitude Analytics**: 사용자 행동 분석
 
 ## 기술 스택
 
 ### Frontend
-- **Next.js 14** (App Router)
-- **React 18**
-- **TypeScript**
+- **Next.js 16** (App Router)
+- **React 19**
+- **TypeScript 5.9**
 - **Tailwind CSS** (Glassmorphism 디자인)
 
 ### Backend
@@ -29,10 +33,13 @@ Flownote는 음성 녹음을 자동으로 텍스트로 변환하고, AI가 정�
 - **Supabase** (PostgreSQL + Auth, 오디오 파일 저장 안 함)
 
 ### 외부 API
-- **WhisperAPI.com** (STT)
+- **Groq Whisper Large V3** (STT)
 - **OpenAI GPT-4o-mini** (문서 정리)
 - **Notion API** (페이지 생성)
+- **Google Docs API** (문서 생성)
 - **Slack API** (메시지 전송)
+- **Web Push** (푸시 알림)
+- **Amplitude** (분석)
 
 ## 빠른 시작
 
@@ -91,14 +98,22 @@ Supabase 대시보드에서 SQL 에디터를 열고 다음 파일들을 순서�
 1. `database/schema.sql` - 기본 스키마 생성
 2. `database/migrations/add_language.sql` - 언어 설정 컬럼 추가
 3. `database/migrations/add_is_onboarded.sql` - 온보딩 완료 플래그 추가
-4. `database/migrations/make_audio_file_path_nullable.sql` - 오디오 파일 경로 nullable로 변경 (오디오 파일 저장 안 함)
+4. `database/migrations/make_audio_file_path_nullable.sql` - 오디오 파일 경로 nullable
+5. `database/migrations/add_notion_save_target_fields.sql` - Notion 저장 대상 설정
+6. `database/migrations/add_processing_step.sql` - 처리 단계 컬럼
+7. `database/migrations/add_error_tracking.sql` - 에러 추적
+8. `database/migrations/add_push_notification.sql` - 푸시 알림
+9. `database/migrations/add_referral_system.sql` - 리퍼럴 시스템
+10. `database/migrations/add_google_integration.sql` - Google Docs 연동
+11. `database/migrations/add_user_name.sql` - 사용자 이름
+12. `database/migrations/add_withdrawn_users_table.sql` - 탈퇴 사용자 테이블
 
 기본 스키마는 다음을 생성합니다:
 - `users` 테이블
 - `recordings` 테이블
 - `custom_formats` 테이블
+- `withdrawn_users` 테이블
 - Row Level Security (RLS) 정책
-- Storage bucket 정책
 
 ### 3. Supabase Storage 설정
 
@@ -186,16 +201,26 @@ npm run dev
 
 ### 사용자
 - `GET /api/user/usage` - 사용량 조회
-- `GET /api/user/language` - 언어 설정 조회
-- `PUT /api/user/language` - 언어 설정 업데이트
+- `POST /api/user/language` - 언어 설정 업데이트
 - `POST /api/user/onboarding` - 온보딩 완료 표시
+- `GET /api/user/data` - 사용자 데이터 조회
 - `DELETE /api/user/data` - 모든 데이터 삭제
+- `GET /api/user/profile` - 프로필 조회
+- `GET /api/user/referral` - 리퍼럴 코드 조회
+- `POST /api/user/referral` - 리퍼럴 코드 적용
+- `POST /api/user/push-subscription` - 푸시 구독 등록
+- `DELETE /api/user/push-subscription` - 푸시 구독 해제
+- `GET /api/user/push-enabled` - 푸시 알림 상태 조회
+- `POST /api/user/push-enabled` - 푸시 알림 상태 변경
+- `POST /api/user/withdraw` - 사용자 탈퇴
+- `GET /api/user/google` - Google 연동 상태 조회
+- `POST /api/user/google` - Google Docs 연동
 
 ### 포맷
 - `GET /api/formats` - 커스텀 포맷 목록
 - `POST /api/formats` - 커스텀 포맷 생성
-- `PUT /api/formats/[id]` - 커스텀 포맷 수정
-- `DELETE /api/formats/[id]` - 커스텀 포맷 삭제
+- `PUT /api/formats` - 커스텀 포맷 수정
+- `DELETE /api/formats` - 커스텀 포맷 삭제
 
 ## 개발 현황
 
@@ -220,12 +245,18 @@ npm run dev
 - [x] 다국어 지원 (i18n) - 한국어/영어
 - [x] OAuth 콜백에서 언어 설정 유지
 
+### ✅ 추가 구현 완료
+- [x] Push 알림 기능
+- [x] 리퍼럴 시스템 (추천인 코드)
+- [x] Google Docs 연동
+- [x] 사용자 탈퇴 기능
+- [x] Amplitude Analytics 연동
+- [x] 실시간 처리 상태 표시 (폴링 기반)
+
 ### 📋 향후 개선 사항
-- [ ] 에러 핸들링 강화
 - [ ] WebSocket 기반 실시간 진행 상황 표시
-- [ ] 성능 최적화 (이미지 최적화, 코드 스플리팅)
+- [ ] 성능 최적화
 - [ ] 단위 테스트 및 E2E 테스트
-- [ ] Sentry 에러 트래킹
 - [ ] 녹음 편집 기능
 - [ ] 팀 공유 기능
 

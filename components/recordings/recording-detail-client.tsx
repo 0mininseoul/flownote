@@ -96,13 +96,13 @@ export function RecordingDetailClient({ recording }: RecordingDetailClientProps)
             </button>
             <div className="flex items-center gap-2">
               <Image
-                src="/icons/flownote logo.png"
-                alt="Flownote"
+                src="/icons/archy logo.png"
+                alt="Archy"
                 width={32}
                 height={32}
                 className="rounded-lg"
               />
-              <span className="text-xl font-bold text-slate-900">Flownote</span>
+              <span className="text-xl font-bold text-slate-900">Archy</span>
             </div>
           </div>
 
@@ -189,11 +189,10 @@ export function RecordingDetailClient({ recording }: RecordingDetailClientProps)
                 {recording.formatted_content && (
                   <button
                     onClick={() => setViewMode("formatted")}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                      viewMode === "formatted"
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${viewMode === "formatted"
                         ? "border-slate-900 text-slate-900"
                         : "border-transparent text-slate-500 hover:text-slate-700"
-                    }`}
+                      }`}
                   >
                     정리된 문서
                   </button>
@@ -201,11 +200,10 @@ export function RecordingDetailClient({ recording }: RecordingDetailClientProps)
                 {recording.transcript && (
                   <button
                     onClick={() => setViewMode("transcript")}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                      viewMode === "transcript"
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${viewMode === "transcript"
                         ? "border-slate-900 text-slate-900"
                         : "border-transparent text-slate-500 hover:text-slate-700"
-                    }`}
+                      }`}
                   >
                     원본 전사본
                   </button>

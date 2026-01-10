@@ -1,5 +1,5 @@
 # 📋 **PRD (Product Requirements Document)**
-## **Flownote - 자동 음성 문서화 서비스**
+## **Archy - 자동 음성 문서화 서비스**
 
 **버전:** 1.0 (MVP)  
 **작성일:** 2025-11-03  
@@ -347,7 +347,7 @@ A. [답변 요약]
 - OAuth 2.0 인증
 - 사용자 선택 Database에 페이지 생성
 - 페이지에 포함될 내용:
-  - 제목: "Flownote - YYYY-MM-DD HH:MM"
+  - 제목: "Archy - YYYY-MM-DD HH:MM"
   - 본문: AI 정리 문서 (Markdown)
   - 첨부 파일: 원본 오디오 파일 (MP3)
   - 속성:
@@ -702,8 +702,8 @@ FormData: audioFile
 ```json
 // public/manifest.json
 {
-  "name": "Flownote",
-  "short_name": "Flownote",
+  "name": "Archy",
+  "short_name": "Archy",
   "description": "자동 음성 문서화 서비스",
   "start_url": "/",
   "display": "standalone",

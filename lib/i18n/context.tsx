@@ -16,7 +16,7 @@ interface I18nContextType {
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
 // Cookie name for language preference
-const LOCALE_COOKIE = "flownote_locale";
+const LOCALE_COOKIE = "archy_locale";
 
 // Helper to get cookie value
 function getCookie(name: string): string | undefined {

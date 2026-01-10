@@ -1,6 +1,6 @@
-# Flownote 배포 가이드
+# Archy 배포 가이드
 
-이 문서는 Flownote 애플리케이션을 Vercel에 배포하는 방법을 설명합니다.
+이 문서는 Archy 애플리케이션을 Vercel에 배포하는 방법을 설명합니다.
 
 ## 사전 준비
 
@@ -31,18 +31,12 @@
 **필요한 정보:**
 - `OPENAI_API_KEY`: OpenAI API 키
 
-### 4. WhisperAPI 설정
+### 4. Groq API 설정 (STT)
 
-1. [WhisperAPI.com](https://whisperapi.com)에서 계정을 생성합니다.
-2. API 키를 발급받습니다 (무료 30시간 제공).
+1. [Groq Console](https://console.groq.com)에서 API 키를 발급받습니다.
 
 **필요한 정보:**
-- `WHISPER_API_KEY`: WhisperAPI 키
-
-**백업 옵션 (Groq):**
-- 무료로 사용 가능한 Groq Whisper API를 백업으로 사용할 수 있습니다.
-- [Groq Console](https://console.groq.com)에서 API 키 발급
-- `GROQ_API_KEY` 환경 변수 추가
+- `GROQ_API_KEY`: Groq API 키
 
 ### 5. Notion Integration
 
@@ -84,7 +78,7 @@ git init
 git add .
 git commit -m "Initial commit"
 git branch -M main
-git remote add origin https://github.com/your-username/flownote.git
+git remote add origin https://github.com/your-username/archy.git
 git push -u origin main
 ```
 
@@ -106,8 +100,11 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 # OpenAI
 OPENAI_API_KEY=sk-...
 
-# WhisperAPI
+# WhisperAPI (백업, 선택사항)
 WHISPER_API_KEY=your_whisper_key
+
+# Groq (STT - 필수)
+GROQ_API_KEY=your_groq_api_key
 
 # Notion
 NOTION_CLIENT_ID=your_notion_client_id

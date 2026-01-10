@@ -7,7 +7,7 @@ export default function TermsOfServicePage() {
         <div className="space-y-6 text-gray-700">
           <section>
             <p className="mb-4">
-              본 약관은 Flownote(이하 "회사")가 제공하는 음성 녹음 및 텍스트
+              본 약관은 Archy(이하 "회사")가 제공하는 음성 녹음 및 텍스트
               변환 서비스(이하 "서비스")의 이용과 관련하여 회사와 이용자 간의
               권리, 의무 및 책임사항을 규정함을 목적으로 합니다.
             </p>

@@ -14,13 +14,13 @@ export function LandingClient() {
                 <div className="max-w-7xl mx-auto px-4 h-14 sm:h-16 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <Image
-                            src="/icons/flownote logo.png"
-                            alt="Flownote"
+                            src="/icons/archy logo.png"
+                            alt="Archy"
                             width={32}
                             height={32}
                             className="rounded-lg"
                         />
-                        <span className="text-lg sm:text-xl font-bold text-slate-900">Flownote</span>
+                        <span className="text-lg sm:text-xl font-bold text-slate-900">Archy</span>
                     </div>
                     <div className="flex items-center gap-2 sm:gap-4">
                         {/* 모바일에서는 네비게이션 링크 숨김 */}

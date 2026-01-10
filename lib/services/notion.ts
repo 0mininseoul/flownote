@@ -382,7 +382,7 @@ export async function getNotionDatabases(accessToken: string): Promise<any[]> {
 export async function createNotionDatabase(
   accessToken: string,
   pageId: string,
-  title: string = "Flownote Recordings"
+  title: string = "Archy Recordings"
 ): Promise<string> {
   try {
     const response = await fetch(`${NOTION_API_BASE}/databases`, {

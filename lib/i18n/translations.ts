@@ -40,7 +40,7 @@ export const translations = {
       },
       features: {
         title: "가장 가성비 있는 AI 노트 테이커",
-        description: "더 이상 기록은 걱정하지 마세요.\n대화에 집중하고, 나머지는 Flownote에게 맡기세요.",
+        description: "더 이상 기록은 걱정하지 마세요.\n대화에 집중하고, 나머지는 Archy에게 맡기세요.",
         recording: {
           title: "고품질 녹음",
           description: "자동 저장과 클라우드 백업이 되는 웹 녹음. 최대 120분까지.",
@@ -92,8 +92,8 @@ export const translations = {
         description: "자동화된 문서화로 매주 몇 시간을 절약할 수 있어요!",
       },
       footer: {
-        rights: "©2025 FLOWNOTE · All rights reserved.",
-        ceo: "FLOWNOTE | CEO: Youngmin Park",
+        rights: "©2025 ARCHY · All rights reserved.",
+        ceo: "ARCHY | CEO: Youngmin Park",
         privacy: "Privacy",
         terms: "Terms",
       },
@@ -278,7 +278,7 @@ export const translations = {
       },
       withdrawComplete: {
         title: "탈퇴가 완료되었습니다",
-        description: "그동안 Flownote를 이용해 주셔서 감사합니다.\n언제든 다시 돌아오시면 환영합니다! 👋",
+        description: "그동안 Archy를 이용해 주셔서 감사합니다.\n언제든 다시 돌아오시면 환영합니다! 👋",
         homeButton: "홈으로 돌아가기",
       },
       language: {
@@ -317,7 +317,7 @@ export const translations = {
     // Onboarding
     onboarding: {
       step1: {
-        title: "Flownote에 오신 것을 환영합니다",
+        title: "Archy에 오신 것을 환영합니다",
         description: "녹음 한 번으로 완성되는 자동 문서화 서비스입니다.",
         getStarted: "시작하기",
         referralQuestion: "친구에게 추천받으셨나요?",
@@ -445,7 +445,7 @@ export const translations = {
       },
       features: {
         title: "Everything you need to capture ideas",
-        description: "Stop worrying about taking notes. Focus on the conversation and let Flownote handle the rest.",
+        description: "Stop worrying about taking notes. Focus on the conversation and let Archy handle the rest.",
         recording: {
           title: "Crystal Clear Recording",
           description: "High-quality web recording with auto-save and cloud backup. Record up to 120 minutes.",
@@ -497,8 +497,8 @@ export const translations = {
         description: "Join thousands of professionals who save hours every week with automated documentation.",
       },
       footer: {
-        rights: "©2025 FLOWNOTE · All rights reserved.",
-        ceo: "FLOWNOTE | CEO: Youngmin Park",
+        rights: "©2025 ARCHY · All rights reserved.",
+        ceo: "ARCHY | CEO: Youngmin Park",
         privacy: "Privacy",
         terms: "Terms",
       },
@@ -682,7 +682,7 @@ export const translations = {
       },
       withdrawComplete: {
         title: "Account Deleted",
-        description: "Thank you for using Flownote.\nWe hope to see you again! 👋",
+        description: "Thank you for using Archy.\nWe hope to see you again! 👋",
         homeButton: "Go to Home",
       },
       language: {
@@ -721,7 +721,7 @@ export const translations = {
     // Onboarding
     onboarding: {
       step1: {
-        title: "Welcome to Flownote",
+        title: "Welcome to Archy",
         description: "One recording, automatic documentation.",
         getStarted: "Get Started",
         referralQuestion: "Got a referral code?",

@@ -1,13 +1,13 @@
-# FlowNote - LLM Context 기획서
+# Archy - LLM Context 기획서
 
-> 이 문서는 FlowNote 서비스의 전체 구조를 LLM(Large Language Model)이 컨텍스트로 이해할 수 있도록 정리한 문서입니다.
+> 이 문서는 Archy 서비스의 전체 구조를 LLM(Large Language Model)이 컨텍스트로 이해할 수 있도록 정리한 문서입니다.
 
 ---
 
 ## 1. 서비스 개요
 
 ### 1.1 핵심 컨셉
-**FlowNote**는 "녹음 한 번 하면 완성되는 자동 문서" 서비스입니다.
+**Archy**는 "녹음 한 번 하면 완성되는 자동 문서" 서비스입니다.
 
 - **목적**: 음성 녹음 → 자동 텍스트 변환(STT) → AI 문서 정리 → Notion 저장 + Slack 알림
 - **타겟 사용자**: 직장인(회의록), 대학생(강의 요약), 프리랜서(인터뷰 기록)
@@ -19,10 +19,14 @@
 | **자동 STT** | Groq Whisper Large V3를 통한 음성→텍스트 변환 |
 | **AI 문서 정리** | GPT-4o-mini로 문서 자동 정리 (기본 포맷: meeting) |
 | **Notion 연동** | 정리된 문서를 Notion 페이지로 자동 생성 |
+| **Google Docs 연동** | Google Docs에 문서 저장 지원 |
 | **Slack 알림** | 처리 완료 시 Slack 메시지 전송 |
+| **Push 알림** | 웹 푸시 알림으로 처리 완료 알림 |
+| **리퍼럴 시스템** | 추천인 코드로 보너스 분 적립 |
 | **실시간 처리 상태** | 전사 중/요약 중/저장 중 단계별 상태 표시 |
 | **PWA 지원** | 모바일 홈 화면 추가 가능 |
 | **다국어 지원** | 한국어/영어 자동 감지 및 설정 (i18n) |
+| **Amplitude Analytics** | 사용자 행동 분석 |
 
 ---
 
@@ -32,7 +36,7 @@
 ```
 - Next.js 16 (App Router)
 - React 19
-- TypeScript 5
+- TypeScript 5.9
 - Tailwind CSS (Glassmorphism 디자인)
 ```
 
@@ -47,8 +51,11 @@
 - Groq API (Whisper Large V3 STT 변환)
 - OpenAI GPT-4o-mini (문서 정리)
 - Notion API (페이지 생성)
+- Google Docs API (문서 생성)
 - Slack API (메시지 전송)
+- Web Push (푸시 알림)
 - Google OAuth (인증)
+- Amplitude (분석)
 ```
 
 ---
@@ -56,7 +63,7 @@
 ## 3. 프로젝트 구조
 
 ```
-flownote/
+archy/
 ├── app/                          # Next.js App Router
 │   ├── api/                      # API Routes
 │   │   ├── auth/                 # 인증 관련 (Google OAuth, Notion/Slack OAuth callback)
@@ -86,20 +93,31 @@ flownote/
 │   │   ├── translations.ts       # 번역 텍스트 정의
 │   │   └── index.ts              # export
 │   ├── services/                 # 외부 API 서비스
-│   │   ├── whisper.ts            # WhisperAPI STT 서비스
+│   │   ├── whisper.ts            # Groq Whisper STT 서비스
 │   │   ├── openai.ts             # OpenAI 문서 정리 서비스
 │   │   ├── notion.ts             # Notion API 서비스
-│   │   └── slack.ts              # Slack API 서비스
+│   │   ├── slack.ts              # Slack API 서비스
+│   │   ├── google.ts             # Google Docs API 서비스
+│   │   ├── push.ts               # Push 알림 서비스
+│   │   └── recording-processor.ts # 녹음 처리 파이프라인
 │   ├── prompts.ts                # AI 프롬프트 템플릿
 │   ├── auth.ts                   # 인증 헬퍼
 │   └── utils.ts                  # 공통 유틸리티
 │
 ├── database/                     # 데이터베이스
 │   ├── schema.sql                # Supabase PostgreSQL 기본 스키마
-│   └── migrations/               # 데이터베이스 마이그레이션
-│       ├── add_language.sql      # 언어 설정 컬럼 추가
-│       ├── add_is_onboarded.sql  # 온보딩 완료 플래그 추가
-│       └── add_processing_step.sql # 처리 단계 컬럼 추가
+│   └── migrations/               # 데이터베이스 마이그레이션 (13개)
+│       ├── add_language.sql
+│       ├── add_is_onboarded.sql
+│       ├── make_audio_file_path_nullable.sql
+│       ├── add_notion_save_target_fields.sql
+│       ├── add_processing_step.sql
+│       ├── add_error_tracking.sql
+│       ├── add_push_notification.sql
+│       ├── add_referral_system.sql
+│       ├── add_google_integration.sql
+│       ├── add_user_name.sql
+│       └── add_withdrawn_users_table.sql
 │
 ├── types/                        # TypeScript 타입 정의
 │
@@ -124,14 +142,25 @@ flownote/
 id                    UUID PRIMARY KEY
 email                 TEXT UNIQUE NOT NULL
 google_id             TEXT UNIQUE NOT NULL
+name                  TEXT                       -- 사용자 이름
 notion_access_token   TEXT
 notion_database_id    TEXT
+notion_save_target_type TEXT                    -- 'database' | 'page'
+notion_save_target_id TEXT
 slack_access_token    TEXT
 slack_channel_id      TEXT
-monthly_minutes_used  INTEGER DEFAULT 0      -- 월 사용량 (분)
-last_reset_at         TIMESTAMP              -- 마지막 리셋 시간
-language              VARCHAR(2) DEFAULT 'ko' -- 언어 설정 (ko|en)
-is_onboarded          BOOLEAN DEFAULT false  -- 온보딩 완료 여부
+google_access_token   TEXT                      -- Google Docs 연동
+google_refresh_token  TEXT
+google_docs_enabled   BOOLEAN DEFAULT false
+monthly_minutes_used  INTEGER DEFAULT 0         -- 월 사용량 (분)
+bonus_minutes         INTEGER DEFAULT 0         -- 리퍼럴 보너스 분
+last_reset_at         TIMESTAMP                 -- 마지막 리셋 시간
+language              VARCHAR(2) DEFAULT 'ko'   -- 언어 설정 (ko|en)
+is_onboarded          BOOLEAN DEFAULT false     -- 온보딩 완료 여부
+push_enabled          BOOLEAN DEFAULT false     -- 푸시 알림 활성화
+push_subscription     JSONB                     -- 푸시 구독 정보
+referral_code         VARCHAR(8)                -- 리퍼럴 코드
+referred_by           UUID                      -- 추천인 ID
 created_at            TIMESTAMP
 ```
 
@@ -196,12 +225,22 @@ created_at TIMESTAMP
 ### 5.3 사용자 API
 | Method | Endpoint | 설명 |
 |--------|----------|------|
-| GET | `/api/user/data` | 사용자 연동 상태 조회 (notionConnected, slackConnected) |
+| GET | `/api/user/data` | 사용자 연동 상태 조회 |
 | GET | `/api/user/usage` | 사용량 조회 (분) |
 | POST | `/api/user/language` | 언어 설정 업데이트 (ko|en) |
 | POST | `/api/user/onboarding` | 온보딩 완료 표시 |
 | DELETE | `/api/user/data` | 모든 데이터 삭제 |
 | GET | `/api/user/notion-database` | Notion 데이터베이스 목록 조회 |
+| GET | `/api/user/profile` | 사용자 프로필 조회 |
+| GET | `/api/user/referral` | 리퍼럴 코드 조회 |
+| POST | `/api/user/referral` | 리퍼럴 코드 적용 |
+| POST | `/api/user/push-subscription` | 푸시 구독 등록 |
+| DELETE | `/api/user/push-subscription` | 푸시 구독 해제 |
+| GET | `/api/user/push-enabled` | 푸시 알림 상태 조회 |
+| POST | `/api/user/push-enabled` | 푸시 알림 상태 변경 |
+| POST | `/api/user/withdraw` | 사용자 탈퇴 |
+| GET | `/api/user/google` | Google 연동 상태 조회 |
+| POST | `/api/user/google` | Google Docs 연동 |
 
 ### 5.4 포맷 API
 | Method | Endpoint | 설명 |
@@ -327,7 +366,7 @@ NEXT_PUBLIC_APP_URL=
 - **지원 언어**: 한국어(ko), 영어(en)
 - **자동 감지**:
   - Vercel GeoIP 헤더 기반 국가 감지 (KR → 한국어)
-  - Cookie 기반 언어 설정 저장 (`flownote_locale`)
+  - Cookie 기반 언어 설정 저장 (`archy_locale`)
 - **OAuth 콜백**: 로그인 시 locale을 query parameter로 전달하여 언어 설정 유지
 - **Middleware**: 요청마다 locale cookie 설정 및 유지
 

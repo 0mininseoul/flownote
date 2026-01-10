@@ -116,13 +116,13 @@ export function DashboardClient({ initialConnectionStatus }: DashboardClientProp
       <header className="app-header">
         <div className="flex items-center gap-2">
           <Image
-            src="/icons/flownote logo.png"
-            alt="Flownote"
+            src="/icons/archy logo.png"
+            alt="Archy"
             width={32}
             height={32}
             className="rounded-lg"
           />
-          <span className="text-lg font-bold text-slate-900">Flownote</span>
+          <span className="text-lg font-bold text-slate-900">Archy</span>
         </div>
       </header>
 

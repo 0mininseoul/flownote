@@ -7,7 +7,7 @@ import { pretendard } from "@/lib/fonts";
 import { ClientProviders } from "./client-providers";
 
 export const metadata: Metadata = {
-  title: "Flownote - 자동 음성 문서화 서비스",
+  title: "Archy - 자동 음성 문서화 서비스",
   description: "녹음 버튼 하나만 누르면, 자동으로 정리된 문서를 받아볼 수 있는 자동문서화 솔루션",
   manifest: "/manifest.json",
   icons: {
@@ -17,22 +17,22 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "ko_KR",
-    url: "https://flownote.vercel.app",
-    siteName: "Flownote",
-    title: "Flownote - 자동 음성 문서화 서비스",
+    url: "https://archynote.vercel.app",
+    siteName: "Archy",
+    title: "Archy - 자동 음성 문서화 서비스",
     description: "녹음 버튼 하나만 누르면, 자동으로 정리된 문서를 받아볼 수 있는 자동문서화 솔루션",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Flownote - 자동 음성 문서화 서비스",
+        alt: "Archy - 자동 음성 문서화 서비스",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Flownote - 자동 음성 문서화 서비스",
+    title: "Archy - 자동 음성 문서화 서비스",
     description: "녹음 버튼 하나만 누르면, 자동으로 정리된 문서를 받아볼 수 있는 자동문서화 솔루션",
     images: ["/og-image.png"],
   },
@@ -54,7 +54,7 @@ export default async function RootLayout({
 }) {
   // Get locale from cookie (set by middleware)
   const cookieStore = await cookies();
-  const localeCookie = cookieStore.get("flownote_locale")?.value;
+  const localeCookie = cookieStore.get("archy_locale")?.value;
   const initialLocale: Locale = (localeCookie === "en" ? "en" : "ko");
 
   return (
@@ -67,7 +67,7 @@ export default async function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="Flownote" />
+        <meta name="apple-mobile-web-app-title" content="Archy" />
       </head>
       <body className={`${pretendard.className} antialiased`}>
         <I18nProvider initialLocale={initialLocale}>

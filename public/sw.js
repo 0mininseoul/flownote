@@ -1,7 +1,7 @@
-// Service Worker for Flownote PWA
+// Service Worker for Archy PWA
 // v5: Added push notification support
 
-const CACHE_NAME = 'flownote-v5';
+const CACHE_NAME = 'archy-v1';
 // Only cache static assets, not routes that require auth
 const urlsToCache = [
   '/manifest.json'
@@ -117,12 +117,12 @@ self.addEventListener('push', (event) => {
           title: '확인하기'
         }
       ],
-      tag: 'flownote-recording',
+      tag: 'archy-recording',
       renotify: true
     };
 
     event.waitUntil(
-      self.registration.showNotification(data.title || 'Flownote', options)
+      self.registration.showNotification(data.title || 'Archy', options)
     );
   } catch (error) {
     console.error('Push notification error:', error);

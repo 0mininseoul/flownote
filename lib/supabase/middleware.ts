@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Cookie name for language preference
-const LOCALE_COOKIE = "flownote_locale";
+const LOCALE_COOKIE = "archy_locale";
 
 // 30 days in seconds for persistent login
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30;

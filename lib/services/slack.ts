@@ -9,7 +9,7 @@ export async function sendSlackNotification(
   urls: {
     notionUrl?: string;
     googleDocUrl?: string;
-    flownoteUrl: string;
+    archyUrl: string;
   }
 ): Promise<void> {
   const client = new WebClient(accessToken);
@@ -44,15 +44,15 @@ export async function sendSlackNotification(
     });
   }
 
-  // 연결된 문서가 없으면 Flownote 링크 제공
+  // 연결된 문서가 없으면 Archy 링크 제공
   if (actionsElements.length === 0) {
     actionsElements.push({
       type: "button",
       text: {
         type: "plain_text",
-        text: "FlowNote에서 보기",
+        text: "Archy에서 보기",
       },
-      url: urls.flownoteUrl,
+      url: urls.archyUrl,
       style: "primary",
     });
   }

@@ -1,6 +1,6 @@
-# Flownote 로컬 개발 환경 설정
+# Archy 로컬 개발 환경 설정
 
-이 문서는 Flownote를 로컬 환경에서 실행하는 방법을 설명합니다.
+이 문서는 Archy를 로컬 환경에서 실행하는 방법을 설명합니다.
 
 ## 요구사항
 
@@ -8,13 +8,13 @@
 - npm 또는 yarn
 - Supabase 계정
 - OpenAI API 키
-- WhisperAPI 키 (또는 Groq API 키)
+- Groq API 키 (STT 용)
 
 ## 1. 프로젝트 클론
 
 ```bash
-git clone https://github.com/your-username/flownote.git
-cd flownote
+git clone https://github.com/your-username/archy.git
+cd archy
 ```
 
 ## 2. 패키지 설치
@@ -85,7 +85,15 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 1. `database/migrations/add_language.sql` - 사용자 언어 설정 컬럼 추가
 2. `database/migrations/add_is_onboarded.sql` - 온보딩 완료 플래그 추가
-3. `database/migrations/make_audio_file_path_nullable.sql` - 오디오 파일 경로 nullable로 변경 (오디오 파일 저장 안 함)
+3. `database/migrations/make_audio_file_path_nullable.sql` - 오디오 파일 경로 nullable
+4. `database/migrations/add_notion_save_target_fields.sql` - Notion 저장 대상 설정
+5. `database/migrations/add_processing_step.sql` - 처리 단계 컬럼
+6. `database/migrations/add_error_tracking.sql` - 에러 추적
+7. `database/migrations/add_push_notification.sql` - 푸시 알림
+8. `database/migrations/add_referral_system.sql` - 리퍼럴 시스템
+9. `database/migrations/add_google_integration.sql` - Google Docs 연동
+10. `database/migrations/add_user_name.sql` - 사용자 이름
+11. `database/migrations/add_withdrawn_users_table.sql` - 탈퇴 사용자 테이블
 
 각 파일의 내용을 SQL Editor에서 실행합니다.
 
@@ -109,16 +117,10 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 1. [OpenAI Platform](https://platform.openai.com)에서 API 키를 생성합니다.
 2. `.env`의 `OPENAI_API_KEY`에 추가합니다.
 
-### 5.2 WhisperAPI
+### 5.2 Groq API (STT - 필수)
 
-1. [WhisperAPI.com](https://whisperapi.com)에서 계정을 생성합니다.
-2. API 키를 발급받아 `.env`의 `WHISPER_API_KEY`에 추가합니다.
-
-**백업 옵션:** Groq의 Whisper API (무료)
-```bash
-# .env에 추가
-GROQ_API_KEY=your_groq_api_key
-```
+1. [Groq Console](https://console.groq.com)에서 API 키를 생성합니다.
+2. `.env`의 `GROQ_API_KEY`에 추가합니다.
 
 ### 5.3 Notion (선택사항 - 온보딩 시 필요)
 

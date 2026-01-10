@@ -136,9 +136,9 @@ export async function GET(request: Request) {
     });
 
     // Preserve locale cookie - prefer locale from query params, then existing cookie
-    const localeToSet = locale || cookieStore.get("flownote_locale")?.value || "ko";
+    const localeToSet = locale || cookieStore.get("archy_locale")?.value || "ko";
     if (localeToSet === "ko" || localeToSet === "en") {
-      response.cookies.set("flownote_locale", localeToSet, {
+      response.cookies.set("archy_locale", localeToSet, {
         path: "/",
         maxAge: 60 * 60 * 24 * 365, // 1 year
         sameSite: "lax",

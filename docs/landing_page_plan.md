@@ -1,8 +1,8 @@
-# FlowNote 랜딩 페이지 리디자인 기획서 (Final)
+# Archy 랜딩 페이지 리디자인 기획서 (Final)
 
 ## 1. 서비스 개요
 
-**FlowNote**는 "녹음 한 번 하면 완성되는 자동 문서" 서비스입니다.
+**Archy**는 "녹음 한 번 하면 완성되는 자동 문서" 서비스입니다.
 
 | 핵심 가치 | 설명 |
 |-----------|------|
@@ -103,8 +103,8 @@
 좌측 하단에 다음 사업자 정보를 명시합니다.
 
 ```
-©2025 FLOWNOTE · All rights reserved.
-FLOWNOTE | CEO: Youngmin Park
+©2025 ARCHY · All rights reserved.
+ARCHY | CEO: Youngmin Park
 BNN : 478-59-01063
 tnsb5373@gmail.com
 ```

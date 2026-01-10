@@ -102,7 +102,7 @@ export function PWAInstallPrompt({ onComplete }: { onComplete: () => void }) {
         </div>
         <div className="space-y-1">
           <h2 className="text-lg font-bold text-slate-900">모든 설정이 완료되었습니다!</h2>
-          <p className="text-sm text-slate-600">이제 Flownote를 사용할 준비가 되었습니다.</p>
+          <p className="text-sm text-slate-600">이제 Archy를 사용할 준비가 되었습니다.</p>
         </div>
         <button
           onClick={onComplete}
@@ -336,7 +336,7 @@ export function PWAInstallPrompt({ onComplete }: { onComplete: () => void }) {
       <div className="space-y-1">
         <h2 className="text-lg font-bold text-slate-900">모바일에서 더 편리하게!</h2>
         <p className="text-sm text-slate-600">
-          스마트폰에서 Flownote를 열어 홈 화면에 추가하면 앱처럼 사용할 수 있습니다.
+          스마트폰에서 Archy를 열어 홈 화면에 추가하면 앱처럼 사용할 수 있습니다.
         </p>
       </div>
       <button

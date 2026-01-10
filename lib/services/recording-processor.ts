@@ -359,14 +359,14 @@ async function stepSlackNotify(
   log(recordingId, "Step 5: Sending Slack notification...");
 
   try {
-    let appUrl = "https://flownoteforu.vercel.app";
+    let appUrl = "https://archynote.vercel.app";
     if (process.env.NODE_ENV === "development") {
       appUrl = "http://localhost:3000";
     } else if (process.env.NEXT_PUBLIC_APP_URL) {
       appUrl = process.env.NEXT_PUBLIC_APP_URL;
     }
 
-    const flownoteUrl = `${appUrl}/recordings/${recordingId}`;
+    const archyUrl = `${appUrl}/recordings/${recordingId}`;
 
     await sendSlackNotification(
       userData.slack_access_token,
@@ -376,7 +376,7 @@ async function stepSlackNotify(
       {
         notionUrl: notionUrl || undefined,
         googleDocUrl: googleDocUrl || undefined,
-        flownoteUrl,
+        archyUrl,
       }
     );
 

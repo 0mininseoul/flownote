@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Flownote is an automated voice documentation service built with Next.js 14 (App Router). Users record audio, which is transcribed via Groq Whisper API, formatted by OpenAI GPT-4o-mini, and saved to Notion with optional Slack notifications. The app is a PWA with multilingual support (Korean/English).
+Archy is an automated voice documentation service built with Next.js 14 (App Router). Users record audio, which is transcribed via Groq Whisper API, formatted by OpenAI GPT-4o-mini, and saved to Notion with optional Slack notifications. The app is a PWA with multilingual support (Korean/English).
 
 **Critical: Audio files are NOT stored.** They are sent directly to Groq API for transcription, then discarded. Only text (transcripts and formatted content) is persisted in the database.
 

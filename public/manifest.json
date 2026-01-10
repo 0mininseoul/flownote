@@ -1,7 +1,7 @@
 {
-  "id": "flownote-pwa",
-  "name": "Flownote - 자동 음성 문서화 서비스",
-  "short_name": "Flownote",
+  "id": "archy-pwa",
+  "name": "Archy - 자동 음성 문서화 서비스",
+  "short_name": "Archy",
   "description": "녹음 한 번 하면 완성되는 자동 문서",
   "start_url": "/dashboard",
   "scope": "/",
@@ -24,7 +24,10 @@
       "type": "image/png"
     }
   ],
-  "categories": ["productivity", "utilities"],
+  "categories": [
+    "productivity",
+    "utilities"
+  ],
   "shortcuts": [
     {
       "name": "새 녹음",

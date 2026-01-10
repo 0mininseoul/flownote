@@ -36,7 +36,7 @@ export const POST = withAuth<{ recording: Pick<Recording, "id" | "title" | "stat
     }
 
     // Generate title
-    const title = `Flownote - ${formatKSTDate()}`;
+    const title = `Archy - ${formatKSTDate()}`;
 
     // Create recording record
     const { data: recording, error: recordingError } = await supabase

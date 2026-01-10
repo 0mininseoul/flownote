@@ -1,17 +1,17 @@
-# Flownote 기능 명세서
+# Archy 기능 명세서
 
-**버전:** 2.0
-**최종 업데이트:** 2025-12-25
+**버전:** 3.0
+**최종 업데이트:** 2026-01-10
 
 ---
 
 ## 1. 서비스 개요
 
-**Flownote**는 음성을 자동으로 문서화하는 AI 기반 서비스입니다.
+**Archy**는 음성을 자동으로 문서화하는 AI 기반 서비스입니다.
 
 | 항목 | 설명 |
 |------|------|
-| **서비스명** | Flownote |
+| **서비스명** | Archy |
 | **핵심 가치** | 녹음 한 번으로 완성되는 자동 문서 |
 | **타겟 사용자** | 직장인, 대학생, 프리랜서 |
 | **플랫폼** | 웹 (PWA 지원) |
@@ -70,6 +70,33 @@
 - 3초 간격 폴링으로 실시간 업데이트
 - 처리 중인 녹음이 있을 때 안내 문구 표시
 
+### 2.7 Push 알림
+| 기능 | 상세 |
+|------|------|
+| 기술 | Web Push API + web-push 라이브러리 |
+| 트리거 | 녹음 처리 완료 시 자동 발송 |
+| 설정 | 설정 페이지에서 ON/OFF 가능 |
+
+### 2.8 리퍼럴 시스템
+| 기능 | 상세 |
+|------|------|
+| 추천 코드 | 사용자별 고유 8자리 코드 |
+| 보너스 | 추천인/피추천인 모두 보너스 분 적립 |
+| 적용 시점 | 온보딩 Step 1에서 입력 |
+
+### 2.9 Google Docs 연동
+| 기능 | 상세 |
+|------|------|
+| 인증 | Google OAuth 2.0 |
+| 저장 위치 | 사용자 Google Drive |
+| 자동 생성 | 문서 자동 생성 |
+
+### 2.10 사용자 탈퇴
+| 기능 | 상세 |
+|------|------|
+| 탈퇴 처리 | 사용자 데이터 삭제 + withdrawn_users 테이블 이동 |
+| 데이터 보관 | 탈퇴 사용자 데이터 별도 보관 |
+
 ---
 
 ## 3. 페이지별 기능
@@ -103,7 +130,7 @@
 
 | 기능 | 상세 |
 |------|------|
-| 헤더 | Flownote 로고 |
+| 헤더 | Archy 로고 |
 | 녹음 카드 | 녹음 버튼, 타이머, 일시정지/중지 |
 | 연동 경고 | Notion/Slack 미연동 시 주의 문구 표시 |
 | 개인정보 안내 | "음성 녹음해도 어차피 안 들으시죠? 음성은 텍스트로 변환된 후 즉시 폐기해 드립니다." |
@@ -142,7 +169,10 @@
 | Slack 연동 | 연결 상태, 재연결 |
 | 요약 포맷 | 기본/커스텀 포맷 관리 |
 | 언어 설정 | 한국어/English 선택 |
+| 푸시 알림 | ON/OFF 설정 |
+| 리퍼럴 코드 | 내 추천 코드 확인 및 복사 |
 | 데이터 관리 | 30일 자동 삭제 안내, 모든 데이터 삭제 |
+| 탈퇴 | 사용자 탈퇴 버튼 |
 | 로그아웃 | 로그아웃 버튼 |
 
 ---
@@ -175,14 +205,25 @@ interface User {
   id: string;
   email: string;
   google_id: string;
+  name?: string;
   notion_access_token?: string;
   notion_database_id?: string;
+  notion_save_target_type?: "database" | "page";
+  notion_save_target_id?: string;
   slack_access_token?: string;
   slack_channel_id?: string;
+  google_access_token?: string;
+  google_refresh_token?: string;
+  google_docs_enabled?: boolean;
   monthly_minutes_used: number;
+  bonus_minutes: number;
   last_reset_at: string;
   language: "ko" | "en";
   is_onboarded: boolean;
+  push_enabled: boolean;
+  push_subscription?: object;
+  referral_code: string;
+  referred_by?: string;
   created_at: string;
 }
 ```
@@ -236,7 +277,7 @@ interface CustomFormat {
 
 ### 7.2 언어 감지 순서
 1. 사용자 설정 (DB)
-2. Cookie (`flownote_locale`)
+2. Cookie (`archy_locale`)
 3. Vercel GeoIP 헤더 (한국이면 ko, 그 외 en)
 
 ---
@@ -265,7 +306,7 @@ interface CustomFormat {
 
 ## 10. 향후 계획
 
-- [ ] 실시간 진행 상황 표시 (WebSocket)
+- [ ] WebSocket 기반 실시간 진행 상황 표시
 - [ ] 녹음 편집 기능
 - [ ] 팀 공유 기능
 - [ ] 추가 언어 지원
